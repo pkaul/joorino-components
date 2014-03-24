@@ -1,7 +1,6 @@
 /// <reference path="../jasmine/jasmine.d.ts"/>
 /// <reference path="../es6-promises/es6-promises.d.ts"/>
 
-import When = require("../when/when");
 import Promises = require("../main/Promises");
 
 /**
