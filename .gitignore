@@ -1,0 +1,17 @@
+# IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Grunt
+.grunt/
+bower_components/
+node_modules/
+_SpecRunner.html
+target/*
+
+# Sources
+src/ts/*
+!src/ts/main
+!src/ts/test

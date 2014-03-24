@@ -1,0 +1,18 @@
+{
+    "version": "v4",
+    "path": "./src/ts",
+    "repo": "borisyankov/DefinitelyTyped",
+    "ref": "master",
+    "stats": false,
+    "installed": {
+        "jasmine/jasmine.d.ts": {
+            "commit": "c4b432a01ffc5e2f477641e98a895697f1700f53"
+        },
+        "when/when.d.ts": {
+            "commit": "c4b432a01ffc5e2f477641e98a895697f1700f53"
+        },
+        "es6-promises/es6-promises.d.ts": {
+            "commit": "c4b432a01ffc5e2f477641e98a895697f1700f53"
+        }
+    }
+}
