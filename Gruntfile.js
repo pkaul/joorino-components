@@ -115,8 +115,11 @@ module.exports = function(grunt) {
         },
 
 
+        // ------------- dependency resolution
+
+        // fetches compile dependencies using TypeScript's package manager "tsd"
         tsd: {
-            dependencies: {
+            "compile-dependencies": {
                 options: {
                     // execute a command
                     command: 'reinstall',
@@ -125,8 +128,9 @@ module.exports = function(grunt) {
             }
         },
 
+        // fetches runtime dependencies using "bower"
         bower: {
-            dependencies: {
+            "runtime-dependencies": {
                 options: {
                     targetDir: '<%= dir.target_js %>',
                     layout: 'byType',
@@ -147,7 +151,7 @@ module.exports = function(grunt) {
                 },
                 files: [
                     // add all compiled files
-                    {expand: true, cwd: '<%= dir.target_js %>/main', src: ['**'], dest: '<%= project.name %>/'},
+                    {expand: true, cwd: '<%= dir.target_js %>/main', src: ['**'], dest: '.'},
                     // ... and the dependency information
                     {src: "bower.json"}
                 ]
@@ -167,5 +171,5 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-bower-task');
 
     // Default task(s).
-    grunt.registerTask('default', ['bower:dependencies','tsd:dependencies','ts:compile','jasmine:tests','compress:distribution']);
+    grunt.registerTask('default', ['bower:runtime-dependencies','tsd:compile-dependencies','ts:compile','jasmine:tests','compress:distribution']);
 };
