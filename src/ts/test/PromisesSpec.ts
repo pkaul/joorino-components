@@ -8,6 +8,53 @@ import Promises = require("../main/Promises");
  */
 describe("Promises", function():void {
 
+
+    /**
+     * Tests the Promise implementation's fulfill mechanism
+     */
+    it("PromiseWithFulfill", function():void {
+
+        var value:number = 0;
+        var p:Promise<number> = Promise.resolve<number>(10);
+        p.then(
+            (v:number) => {
+                value = v;
+            },
+            (error:any) => {
+                value = -1;
+            });
+        waitsFor(() => {
+            return value == 10;
+        });
+
+        runs(function() {
+            expect(value).toBe(10);
+        });
+    });
+
+    /**
+     * Tests the Promise implementation's reject mechanism
+     */
+    it("PromiseWithReject", function():void {
+
+        var value:number = 0;
+        var p:Promise<number> = Promise.reject("oh no");
+        p.then(
+            (v:number) => {
+                value = v;
+            },
+            (error:any) => {
+                value = -1;
+            });
+        waitsFor(() => {
+            return value == -1;
+        });
+
+        runs(function() {
+            expect(value).toBe(-1);
+        });
+    })
+
     it("promiseWithTimeoutWithTimeout", function():void {
 
         var result:string = "";
