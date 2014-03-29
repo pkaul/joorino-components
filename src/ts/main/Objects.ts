@@ -50,9 +50,9 @@ class Objects {
     }
 
     /**
-     * Sorts a list of object based on {@link Ordered}. If not ordered, 0 is used as default order
+     * Sorts a list of object using the {@link Ordered} signature. If not ordered, 0 is used as default order
      */
-    public static sortOrdered(objects:Object[]):Object[] {
+    public static sortOrdered<T>(objects:T[]):T[] {
         return objects.sort(Objects.sortOrderedFunction);
     }
 
