@@ -8,7 +8,7 @@ import Events = require("../../event/Events");
 import EventSubscriber = require("../../event/EventSubscriber");
 import Logger = require("./../../logger/Logger");
 import LoggerFactory = require("./../../logger/LoggerFactory");
-import Errors = require("../../Errors");
+import Errors = require("../../lang/Errors");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**

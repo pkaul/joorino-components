@@ -1,10 +1,10 @@
 import EventSubscriber = require("./EventSubscriber");
 import EventPublisher = require("./EventPublisher");
-import Errors = require("../Errors");
+import Errors = require("../lang/Errors");
 import LoggerFactory = require("../logger/LoggerFactory");
 import Logger = require("../logger/Logger");
-import Functions = require("../Functions");
-import Maps = require("../Maps");
+import Functions = require("../lang/Functions");
+import Maps = require("../lang/Maps");
 
 /**
  * A {@link EventSubscriber}/{@link EventPublisher} default implementation

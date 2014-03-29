@@ -1,5 +1,5 @@
-/// <reference path="../jasmine/jasmine.d.ts"/>
-import Functions = require("../main/Functions");
+/// <reference path="../../jasmine/jasmine.d.ts"/>
+import Functions = require("../../main/lang/Functions");
 
 /**
  * Tests {@link Functions}

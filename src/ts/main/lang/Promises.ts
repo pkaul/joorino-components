@@ -1,6 +1,6 @@
 
-import DelayedExecution = require("./execution/DelayedExecution");
-/// <reference path="../es6-promises/es6-promises.d.ts"/>
+import DelayedExecution = require("./../execution/DelayedExecution");
+/// <reference path="../../es6-promises/es6-promises.d.ts"/>
 
 /**
  * Promises related utilities. It provides a thin wrapper around an existing promise implementation.

@@ -1,7 +1,7 @@
 import ComponentFactoryBase = require("./ComponentFactoryBase");
 import ComponentFactory = require("./ComponentFactory");
-import Maps = require("../../Maps");
-import Errors = require("../../Errors");
+import Maps = require("../../lang/Maps");
+import Errors = require("../../lang/Errors");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**

@@ -1,11 +1,11 @@
 import Identifiable = require("./Identifiable");
-import EventSubscriber = require("./event/EventSubscriber");
-import EventHub = require("./event/EventHub");
-import EventPublisher = require("./event/EventPublisher");
-import Classes = require("./Classes");
-import assert = require("./assert");
-import Logger = require("./logger/Logger");
-import LoggerFactory = require("./logger/LoggerFactory");
+import EventSubscriber = require("./../event/EventSubscriber");
+import EventHub = require("./../event/EventHub");
+import EventPublisher = require("./../event/EventPublisher");
+import Classes = require("./../lang/Classes");
+import assert = require("./../lang/assert");
+import Logger = require("./../logger/Logger");
+import LoggerFactory = require("./../logger/LoggerFactory");
 
 /**
  * A basic implementation of an object: Provides a logger, an event listener etc.

@@ -1,6 +1,6 @@
 import ComponentProcessor = require("./ComponentProcessor");
 import Components = require("../Components");
-import ObjectBase = require("../../ObjectBase");
+import ObjectBase = require("../ObjectBase");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**

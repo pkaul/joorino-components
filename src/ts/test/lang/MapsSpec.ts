@@ -1,6 +1,6 @@
-/// <reference path="../jasmine/jasmine.d.ts"/>
+/// <reference path="../../jasmine/jasmine.d.ts"/>
 
-import Maps = require("../main/Maps");
+import Maps = require("../../main/lang/Maps");
 
 /**
  * Tests {@link Maps}

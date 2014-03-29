@@ -1,6 +1,6 @@
 import Level = require("./formatter/Level");
 import LevelHelper = require("./formatter/LevelHelper");
-import Console = require("../../Console");
+import Console = require("../../lang/Console");
 import LoggerEngine = require("./LoggerEngine");
 import ConsoleAppender = require("./appender/ConsoleAppender");
 

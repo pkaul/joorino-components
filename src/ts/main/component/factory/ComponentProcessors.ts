@@ -1,9 +1,9 @@
 import Logger = require("../../logger/Logger");
 import LoggerFactory = require("../../logger/LoggerFactory");
-import Promises = require("../../Promises");
-import Maps = require("../../Maps");
+import Promises = require("../../lang/Promises");
+import Maps = require("../../lang/Maps");
 import ComponentProcessor = require("./ComponentProcessor");
-import assert = require("../../assert");
+import assert = require("../../lang/assert");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 

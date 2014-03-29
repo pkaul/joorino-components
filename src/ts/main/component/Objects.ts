@@ -1,6 +1,6 @@
 import Identifiable = require("./Identifiable");
 import Ordered = require("./Ordered");
-import Classes = require("./Classes");
+import Classes = require("./../lang/Classes");
 
 
 /**

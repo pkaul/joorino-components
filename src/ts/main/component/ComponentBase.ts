@@ -1,11 +1,11 @@
 
-import ObjectBase = require("./../ObjectBase");
+import ObjectBase = require("./ObjectBase");
 import Initializable = require("./Initializable");
 import Destroyable = require("./Destroyable");
 import Startable = require("./Startable");
 import Stoppable = require("./Stoppable");
 import Components = require("./Components");
-import Errors = require("../Errors");
+import Errors = require("../lang/Errors");
 /// <reference path="../../es6-promises/es6-promises.d.ts"/>
 
 /**

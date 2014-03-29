@@ -1,7 +1,7 @@
-/// <reference path="../jasmine/jasmine.d.ts"/>
-/// <reference path="../es6-promises/es6-promises.d.ts"/>
+/// <reference path="../../jasmine/jasmine.d.ts"/>
+/// <reference path="../../es6-promises/es6-promises.d.ts"/>
 
-import Promises = require("../main/Promises");
+import Promises = require("../../main/lang/Promises");
 
 /**
  * Tests {@link Promises}

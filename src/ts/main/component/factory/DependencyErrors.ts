@@ -1,5 +1,5 @@
 
-import Errors = require("../../Errors")
+import Errors = require("../../lang/Errors")
 
 /**
  * Errors that are thrown when a component dependency does not fulfill certain requirements

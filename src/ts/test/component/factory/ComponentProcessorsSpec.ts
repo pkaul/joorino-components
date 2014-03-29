@@ -2,7 +2,7 @@
 
 import ComponentProcessor = require("../../../main/component/factory/ComponentProcessor");
 import ComponentProcessors = require("../../../main/component/factory/ComponentProcessors");
-import Maps = require("../../../main/Maps");
+import Maps = require("../../../main/lang/Maps");
 
 /**
  * Tests {@link ComponentProcessors}

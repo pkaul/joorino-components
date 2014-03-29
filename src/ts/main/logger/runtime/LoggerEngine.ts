@@ -5,7 +5,7 @@ import AppendingLogger = require("./appender/AppendingLogger");
 import Appender = require("./appender/Appender");
 import LoggerFactory = require("../LoggerFactory");
 import Logger = require("../Logger");
-import Classes = require("../../Classes");
+import Classes = require("../../lang/Classes");
 
 
 

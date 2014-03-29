@@ -1,6 +1,6 @@
 import FormattingAppender = require("./FormattingAppender");
 import Level = require("../formatter/Level");
-import Console = require("../../../Console");
+import Console = require("../../../lang/Console");
 
 /**
  * An appender that writes to the console

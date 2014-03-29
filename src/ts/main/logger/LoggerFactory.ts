@@ -1,6 +1,6 @@
 import Logger = require("./Logger");
-import Console = require("../Console");
-import Strings = require("../Strings");
+import Console = require("../lang/Console");
+import Strings = require("../lang/Strings");
 
 /**
  * A logger that does not nothing

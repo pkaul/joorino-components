@@ -1,6 +1,6 @@
-/// <reference path="../jasmine/jasmine.d.ts"/>
+/// <reference path="../../jasmine/jasmine.d.ts"/>
 
-import Classes = require("../main/Classes");
+import Classes = require("../../main/lang/Classes");
 
 /**
  * Tests {@link Classes}
