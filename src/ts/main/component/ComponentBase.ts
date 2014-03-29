@@ -9,7 +9,7 @@ import Errors = require("../Errors");
 /// <reference path="../../es6-promises/es6-promises.d.ts"/>
 
 /**
- * A basic implementation of a bean that is aware of a lifecycle. The bean's lifecycle state is managed internally.
+ * A basic implementation of a component that is aware of a lifecycle. The component's lifecycle state is managed internally.
  */
 class ComponentBase extends ObjectBase implements Initializable, Destroyable, Startable, Stoppable {
 
@@ -29,7 +29,7 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
 
 
     /**
-     * Initializes the bean by changing the state and notifying listeners. May be overridden but needs to invoked anyway.
+     * Initializes the component by changing the state and notifying listeners.
      */
     public init():Promise<any> {
         this.getLogger().debug("Initializing ...");
@@ -41,7 +41,7 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
     }
 
     /**
-     * Destroys the bean by changing the state and notifying listeners. May be overridden but needs to invoked anyway.
+     * Destroys the component by changing the state and notifying listeners.
      */
     public destroy():Promise<any> {
         if( this._state < ComponentBase.STATE_DESTROYED ) {
@@ -55,13 +55,13 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
     }
 
     /**
-     * Starts the bean by changing the state and notifying listeners. May be overridden but needs to invoked anyway.
+     * Starts the component by changing the state and notifying listeners.
      */
     public start():void {
         this.getLogger().debug("Starting ...");
         this.assertInitialized();
         if( this._state !== ComponentBase.STATE_STARTED ) {
-            // don't do anything when the bean is already running
+            // don't do anything when the component is already running
             Components.publishStarted(this.getEventPublisher(), this);
             this._state = ComponentBase.STATE_STARTED;
             this.getLogger().info("Started");
@@ -72,13 +72,13 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
     }
 
     /**
-     * Stops the bean by changing the state and notifying listeners. May be overridden but needs to invoked anyway.
+     * Stops the component by changing the state and notifying listeners.
      */
     public stop():void {
         this.getLogger().debug("Stopping ...");
         this.assertInitialized();
         if( this._state !== ComponentBase.STATE_STOPPED ) {
-            // don't do anything when the bean is already stopped
+            // don't do anything when the component is already stopped
             Components.publishStopped(this.getEventPublisher(), this);
             this._state = ComponentBase.STATE_STOPPED;
             this.getLogger().info("Stopped");
@@ -101,16 +101,16 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
     // ========
 
     /**
-     * Asserts that this bean is at least initialized and not destroyed. If not, an error is thrown
+     * Asserts that this component is at least initialized and not destroyed. If not, an error is thrown
      */
     private assertInitialized():void {
         if( this._state < ComponentBase.STATE_INITIALIZED || this._state >= ComponentBase.STATE_DESTROYED ) {
-            throw Errors.createIllegalStateError("Bean "+this+" is not or no more 'initialized' but in state '"+this.getStateAsString()+"'");
+            throw Errors.createIllegalStateError("Component "+this+" is not or no more 'initialized' but in state '"+this.getStateAsString()+"'");
         }
     }
 
     /**
-     * Asserts that this bean is not initialized yet. If not true, an error is thrown
+     * Asserts that this component is not initialized yet. If not true, an error is thrown
      */
     private assertNotInitialized():void {
         if( this._state !== ComponentBase.STATE_CREATED ) {
