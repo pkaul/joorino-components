@@ -1,6 +1,6 @@
 import ComponentFactoryBase = require("./ComponentFactoryBase");
 import ComponentFactory = require("./ComponentFactory");
-import StringMap = require("../../StringMap");
+import Maps = require("../../Maps");
 import Errors = require("../../Errors");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
@@ -35,7 +35,7 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
 
 
     // definition of the components name:String -> creator:Function
-    private _componentsDefinitions:StringMap<Function>;
+    private _componentsDefinitions:Map<string, Function>;
 
 
     // ==============
@@ -50,14 +50,14 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
     // ===================
 
 
-    public buildComponents():Promise<StringMap<Object>> {
+    public buildComponents():Promise<Map<string, Object>> {
 
         this._componentsDefinitions = this.lookupComponentCreators();
         if( this._componentsDefinitions.size === 0 ) {
             throw Errors.createIllegalArgumentError("No component definitions available: "+this._componentsDefinitions);
         }
 
-        return this.doBuildBeans(this._componentsDefinitions.keys());
+        return this.doBuildBeans(Maps.keys(this._componentsDefinitions));
     }
 
 
@@ -93,9 +93,9 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
      * Look ups the component creator functions
      * @return The functions as componentName:string -> creator:function
      */
-    private lookupComponentCreators():StringMap<Function> {
+    private lookupComponentCreators():Map<string, Function> {
 
-        var result:StringMap<Function> = new StringMap<Function>();
+        var result:Map<string, Function> = Maps.createMap<Function>();
 
         // iterate through all properties
         var ac:Object = this;

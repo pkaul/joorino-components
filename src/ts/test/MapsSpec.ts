@@ -1,18 +1,18 @@
 /// <reference path="../jasmine/jasmine.d.ts"/>
 
-import StringMap = require("../main/StringMap");
+import Maps = require("../main/Maps");
 
 /**
- * Tests {@link StringMap}
+ * Tests {@link Maps}
  */
-describe("StringMap", function() {
+describe("Maps", function() {
 
     it("all", function() {
 
-        var testlings:StringMap<string>[] = [new StringMap<string>(true), new StringMap<string>(false)];
+        var testlings:Map<string, string>[] = [Maps.createMap<string>(true), Maps.createMap<string>(false)];
         for( var t:number = 0; t<testlings.length; t++ ) {
 
-            var testling:StringMap<string> = testlings[t];
+            var testling:Map<string, string> = testlings[t];
 
             testling.set("a", "1");
             expect(testling.size).toBe(1);
@@ -29,14 +29,14 @@ describe("StringMap", function() {
             expect(testling.get("b")).toBe("2");
             expect(testling.size).toBe(3);
 
-            expect(testling.keys().join(",")).toBe("a,c,b");
-            expect(testling.values().join(",")).toBe("1,3,2");
+            expect(Maps.keys(testling).join(",")).toBe("a,c,b");
+            expect(Maps.values(testling).join(",")).toBe("1,3,2");
 
             testling.set("a", "4");
             expect(testling.size).toBe(3);
             expect(testling.get("a")).toBe("4");
 
-            expect(testling.keys().join(",")).toBe("a,c,b");
+            expect(Maps.keys(testling).join(",")).toBe("a,c,b");
             var fe:string[] = [];
             testling.forEach((v:string, k:string) => {
                 fe.push(v);
@@ -47,20 +47,15 @@ describe("StringMap", function() {
             testling.delete("a");
             expect(testling.size).toBe(2);
             expect(testling.get("a")).toBe(undefined);
-            expect(testling.keys().join(",")).toBe("c,b");
-            expect(testling.values().join(",")).toBe("3,2");
+            expect(Maps.keys(testling).join(",")).toBe("c,b");
+            expect(Maps.values(testling).join(",")).toBe("3,2");
 
             testling.clear();
             expect(testling.size).toBe(0);
-            expect(testling.keys().join(",")).toBe("");
+            expect(Maps.keys(testling).join(",")).toBe("");
         }
 
     });
-
-
-
-
-
 });
 
 

@@ -2,7 +2,7 @@
 
 import ComponentProcessor = require("../../../main/component/factory/ComponentProcessor");
 import ComponentProcessors = require("../../../main/component/factory/ComponentProcessors");
-import StringMap = require("../../../main/StringMap");
+import Maps = require("../../../main/Maps");
 
 /**
  * Tests {@link ComponentProcessors}
@@ -19,7 +19,7 @@ describe("ComponentProcessors", function():void {
         var finished:boolean = false;
 
         var log:string[] = [];
-        var components:StringMap<Object> = new StringMap<Object>(true);
+        var components:Map<string, Object> = Maps.createMap(true);
         components.set("key1", "bean1");
         components.set("key2", "bean2");
 

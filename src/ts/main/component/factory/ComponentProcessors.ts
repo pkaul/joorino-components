@@ -1,7 +1,7 @@
 import Logger = require("../../logger/Logger");
 import LoggerFactory = require("../../logger/LoggerFactory");
 import Promises = require("../../Promises");
-import StringMap = require("../../StringMap");
+import Maps = require("../../Maps");
 import ComponentProcessor = require("./ComponentProcessor");
 import assert = require("../../assert");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
@@ -20,7 +20,7 @@ class ComponentProcessors {
      * @param components The components to be applied to the processors
      * @param warnTimeout The timeout in milliseconds after which a warning shall be logged
      */
-    public static processBeforeInit(processors:ComponentProcessor[], components:StringMap<Object>, warnTimeout:number = -1):Promise<any> {
+    public static processBeforeInit(processors:ComponentProcessor[], components:Map<string, Object>, warnTimeout:number = -1):Promise<any> {
 
         if( processors.length === 0 ) {
             return Promise.resolve();
@@ -40,14 +40,15 @@ class ComponentProcessors {
         }
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(result:any) => void,reject:(error:any) => void) => {
-            ComponentProcessors.LOG.warn("Timeout on pre-init components: {0}", components.keys());
-            reject("Timeout on pre-init components: "+components.keys());
+            var keys:string[] = Maps.keys(components);
+            ComponentProcessors.LOG.warn("Timeout on pre-init components: {0}", keys);
+            reject("Timeout on pre-init components: "+keys);
         }, warnTimeout);
     }
 
 
 
-    public static processAfterInit(processors:ComponentProcessor[], components:StringMap<Object>, warnTimeout:number = -1):Promise<any> {
+    public static processAfterInit(processors:ComponentProcessor[], components:Map<string, Object>, warnTimeout:number = -1):Promise<any> {
 
         if( processors.length === 0 ) {
             return Promise.resolve();
@@ -67,13 +68,14 @@ class ComponentProcessors {
         }
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(result:any) => void,reject:(error:any) => void) => {
-            ComponentProcessors.LOG.warn("Timeout on post-init components: {0}", components.keys());
-            reject("Timeout on post-init components: "+components.keys());
+            var keys:string[] = Maps.keys(components);
+            ComponentProcessors.LOG.warn("Timeout on post-init components: {0}", keys);
+            reject("Timeout on post-init components: "+keys);
         }, warnTimeout);
     }
 
 
-    public static processBeforeDestroy(processors:ComponentProcessor[], components:StringMap<Object>, warnTimeout:number = -1):Promise<any> {
+    public static processBeforeDestroy(processors:ComponentProcessor[], components:Map<string, Object>, warnTimeout:number = -1):Promise<any> {
 
         if( processors.length === 0 ) {
             return Promise.resolve();
@@ -86,7 +88,7 @@ class ComponentProcessors {
             var processor:ComponentProcessor = processors[j];
 
             // iterate through all beans (reverse order) and invoke #processBeforeDestroy
-            var componentNames:string[] = components.keys();
+            var componentNames:string[] = Maps.keys(components);
             for( var i:number = componentNames.length-1; i>=0; i-- ) {
                 var p:Promise<any> = processor.processBeforeDestroy(componentNames[i], components.get(componentNames[i]));
                 promises.push(p);
@@ -101,20 +103,20 @@ class ComponentProcessors {
 
 
 
-    public static processAfterDestroy(processors:ComponentProcessor[], components:StringMap<Object>, warnTimeout:number = -1):Promise<any> {
+    public static processAfterDestroy(processors:ComponentProcessor[], components:Map<string, Object>, warnTimeout:number = -1):Promise<any> {
 
         if( processors.length === 0 ) {
             return Promise.resolve();
         }
 
         var promises:Promise<any>[] = [];
-        // iterate over all processors (reverse order)                               #
+        // iterate over all processors (reverse order)
         for( var j:number = processors.length-1; j>=0; j-- ) {
 
             var processor:ComponentProcessor = processors[j];
 
             // iterate through all beans (reverse order) and invoke #processAfterDestroy
-            var componentNames:string[] = components.keys();
+            var componentNames:string[] = Maps.keys(components);
             for( var i:number = componentNames.length-1; i>=0; i-- ) {
                 var p:Promise<any> = processor.processAfterDestroy(componentNames[i], components.get(componentNames[i]));
                 promises.push(p);

@@ -1,3 +1,56 @@
+
+/**
+ * Helpers that are related to Maps
+ */
+class Maps {
+
+    /**
+     * Creates a map instance for strings as key type
+     */
+    public static createMap<V>(sorted:boolean = false):Map<string, V> {
+        return new StringMap<V>(sorted);
+    }
+
+
+    /**
+     * @return The map's keys
+     */
+    public static keys<K, V>(m:Map<K, V>) {
+        if( typeof m['keys'] === 'function' ) {
+            return m['keys']();
+        }
+        else {
+
+            // 'keys' is no in-built function
+            var result:K[] = [];
+            m.forEach((v:V, k:K) => {
+                result.push(k);
+            });
+            return result;
+        }
+    }
+
+
+    /**
+     * @return The map's values
+     */
+    public static values<K, V>(m:Map<K, V>) {
+        if( typeof m['values'] === 'function' ) {
+            return m['values']();
+        }
+        else {
+
+            // 'values' is no in-built function
+            var result:V[] = [];
+            m.forEach((v:V, k:K) => {
+                result.push(v);
+            });
+            return result;
+        }
+    }
+}
+
+
 /**
  * A map implementation that is restricted to string based keys. In addition, the map is able to preserve the elements order.
  */
@@ -86,19 +139,6 @@ class StringMap<T> implements Map<string, T> {
         return this;
     }
 
-    /**
-     * Puts several elements to the map
-     * @param map The elements to put into the map
-     */
-//    public setAll(map:Object):void {
-//        // TODO support map input
-//        for( var key in map ) {
-//            if( map.hasOwnProperty(key) ) {
-//                this.set(key, map[key]);
-//            }
-//        }
-//    }
-
 
     /**
      * Lists the keys that are currently managed by this map
@@ -145,12 +185,10 @@ class StringMap<T> implements Map<string, T> {
         return result;
     }
 
-
-
-
     public toString():string {
         return "StringMap[]";
     }
 }
 
-export = StringMap;
+
+export = Maps;

@@ -4,7 +4,7 @@ import Errors = require("../Errors");
 import LoggerFactory = require("../logger/LoggerFactory");
 import Logger = require("../logger/Logger");
 import Functions = require("../Functions");
-import StringMap = require("../StringMap");
+import Maps = require("../Maps");
 
 /**
  * A {@link EventSubscriber}/{@link EventPublisher} default implementation
@@ -14,7 +14,7 @@ class EventHub implements EventSubscriber, EventPublisher {
     private static LOG:Logger = LoggerFactory.getLogger(EventHub);
     private _name:string;
     private _warnThreshold:number = -1;
-    private _listeners:Map<string, Function[]> = new StringMap<Function[]>();
+    private _listeners:Map<string, Function[]> = Maps.createMap<Function[]>();
 
     constructor(name:string = "unknown", warnThreshold:number = -1) {
         this._name = name;

@@ -3,7 +3,7 @@ import ComponentProcessor = require("./ComponentProcessor");
 import ComponentProcessors = require("./ComponentProcessors");
 import ComponentBase = require("../ComponentBase");
 import Components = require("../Components");
-import StringMap = require("../../StringMap");
+import Maps = require("../../Maps");
 import Errors = require("../../Errors");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
@@ -19,7 +19,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
     private _processors:ComponentProcessor[] = [];
 
     // mapping of built components as "name -> component"
-    private _components:StringMap<Object> = null;
+    private _components:Map<string, Object> = null;
 
     // -- to be used during initialization only
     // current stack of dependencies (component names)
@@ -73,9 +73,9 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
 //        var _superInitializable:lifecycle.Initializable = super;
 
-        return this.buildComponents().then((components:StringMap<Object>) => {
+        return this.buildComponents().then((components:Map<string, Object>) => {
 
-            this.getLogger().info("Created {0} components: {1}", components.size, components.keys());
+            this.getLogger().info("Created {0} components: {1}", components.size, Maps.keys(components));
 
             // ----------- pre-initialize
             this.getLogger().info("Pre-Initializing");
@@ -83,12 +83,12 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
                 // ----------- initialize
                 this.getLogger().info("Initializing");
-                return Components.initAll(components.values(), this._initTimeout).then(() => {
+                return Components.initAll(Maps.values(components), this._initTimeout).then(() => {
 
                     // ----------- post-initialize
                     this.getLogger().info("Post-Initializing");
                     return ComponentProcessors.processAfterInit(this._processors, components, this._initTimeout).then(() => {
-                        this.getLogger().info("Initialized components: {0}", components.keys());
+                        this.getLogger().info("Initialized components: {0}", Maps.keys(components));
                         this._components = components; // store the components
 
                         return super.init();
@@ -111,7 +111,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             // --------------- destroy
             this.getLogger().debug("Destroying");
-            return Components.destroyAll(this._components.values(), this._destroyTimeout).then(() => {
+            return Components.destroyAll(Maps.values(this._components), this._destroyTimeout).then(() => {
 
                 // -------------- post-destroy
                 this.getLogger().debug("Post-Destroying");
@@ -135,7 +135,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         if( this._components === null ) {
             throw Errors.createIllegalStateError("Not initialized or already destroyed");
         }
-        return this._components.keys();
+        return Maps.keys(this._components);
     }
 
     /**
@@ -145,7 +145,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * @return The promise containing the builded components
      */
         // [PROTECTED]
-    public buildComponents():Promise<StringMap<Object>> {
+    public buildComponents():Promise<Map<string, Object>> {
         throw Errors.createAbstractFunctionError("buildComponents");
     }
 
@@ -169,7 +169,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * @return A promise containing all built components as a map name -> component.
      * [PROTECTED]
      */
-    public doBuildBeans(componentNames:string[]):Promise<StringMap<Object>> {
+    public doBuildBeans(componentNames:string[]):Promise<Map<string, Object>> {
 
         this.getLogger().info("Creating {0} components ...", componentNames.length);
         this.initializeBuild();
@@ -179,7 +179,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             // ---- ALL components have been created now.
             // copy them to the final structure
-            var result:StringMap<Object> = new StringMap<Object>();
+            var result:Map<string, Object> = Maps.createMap<Object>();
             for( var i:number=0;i<componentNames.length; i++ ) {
                 result.set(componentNames[i], components[i]);
             }
@@ -205,7 +205,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         if( dependencyNames.length === 0 ) {
             // no dependencies. return immediately
             this.getLogger().debug("No dependencies to resolve");
-            return Promise.resolve(new StringMap<Object>(false));
+            return Promise.resolve(Maps.createMap(false));
         }
 
         this.getLogger().debug("Resolving dependencies [{0}] ...", dependencyNames);
@@ -214,7 +214,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
             this.getLogger().debug("Resolved dependencies [{0}] to {1}", dependencyNames, dependencies);
 
             // copy dependencies into the map
-            var result:StringMap<Object> = new StringMap<Object>(false);
+            var result:Map<string, Object> = Maps.createMap(false);
             for( var k:number = 0; k<dependencyNames.length; k++ ) {
 
                 var dependencyName:string = dependencyNames[k];
@@ -233,7 +233,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Initializes the build process.
      */
     private initializeBuild():void {
-        this._buildComponents = new StringMap<Object>(true);
+        this._buildComponents = Maps.createMap(true);
         this._buildDependencyStack = [];
     }
 
