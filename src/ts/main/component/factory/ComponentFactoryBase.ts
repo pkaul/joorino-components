@@ -95,6 +95,8 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
                     });
                 });
             });
+        }).catch((error:any) => {
+            this.getLogger().error("Error initializing components: {0}", error);
         });
     }
 
@@ -123,6 +125,8 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
                     return superDestroy.apply(null);
                 });
             });
+        }).catch((error:any) => {
+            this.getLogger().error("Error destroying components: {0}", error);
         });
     }
 
