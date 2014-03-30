@@ -1,6 +1,6 @@
 {
-    "name": "joorino-components",
-    "version": "0.9.0",
+    "name": "joorino",
+    "version": "0.9.1",
     "dependencies": {
         "es6-promises": "http://s3.amazonaws.com/es6-promises/promise-0.1.1.js"
     }

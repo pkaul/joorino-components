@@ -1,6 +1,6 @@
 {
-    "name": "joorino-components",
-    "version": "0.9.0",
+    "name": "joorino",
+    "version": "0.9.1",
     "dependencies": {},
     "devDependencies": {
         "grunt": "~0.4.1",
