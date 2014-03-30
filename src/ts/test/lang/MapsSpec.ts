@@ -56,6 +56,12 @@ describe("Maps", function() {
         }
 
     });
+
+    it("initialvalues", function() {
+        var testling:Map<string,string> = Maps.createMap<string>(true, {"a":"b","c":"d"});
+        expect(Maps.keys(testling).join(",")).toBe("a,c");
+        expect(Maps.values(testling).join(",")).toBe("b,d");
+    });
 });
 
 

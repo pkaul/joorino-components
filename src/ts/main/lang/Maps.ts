@@ -6,11 +6,21 @@ class Maps {
 
     /**
      * Creates a map instance for strings as key type
+     * @param sorted If true, then the keys of the map will be kept sorted.
+     * @param source An normal object holding entries to be added to the map
      */
-    public static createMap<V>(sorted:boolean = false):Map<string, V> {
-        return new StringMap<V>(sorted);
-    }
+    public static createMap<V>(sorted:boolean = false, source?:Object):Map<string, V> {
+        var result:Map<string, V> = new StringMap<V>(sorted);
+        if( !!source ) {
+            for( var k  in source ) {
+                if( source.hasOwnProperty(k) ) {
+                    result.set(k, source[k]);
+                }
+            }
+        }
 
+        return result;
+    }
 
     /**
      * @return The map's keys
@@ -52,7 +62,7 @@ class Maps {
 
 
 /**
- * A map implementation that is restricted to string based keys. In addition, the map is able to preserve the elements order.
+ * An (internal) map implementation that is restricted to string based keys. In addition, the map is able to preserve the elements order.
  */
 class StringMap<T> implements Map<string, T> {
 
