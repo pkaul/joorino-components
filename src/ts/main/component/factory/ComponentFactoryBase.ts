@@ -111,7 +111,9 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             // --------------- destroy
             this.getLogger().debug("Destroying");
-            return Components.destroyAll(Maps.values(this._components), this._destroyTimeout).then(() => {
+            var components:Object[] = Maps.values(this._components);
+            components.reverse(); // destroy in reverse order!
+            return Components.destroyAll(components, this._destroyTimeout).then(() => {
 
                 // -------------- post-destroy
                 this.getLogger().debug("Post-Destroying");

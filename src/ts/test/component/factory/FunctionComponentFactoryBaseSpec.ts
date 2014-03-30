@@ -45,10 +45,11 @@ describe("FunctionComponentFactoryBase", function():void {
             expect(bean2.getReference()).toBe(bean3);
             expect(bean3.getName()).toBe("my-bean-3");
 
-            // check the lifecycle order
-            expect(testling.getEvents().join(",")).toBe("beforeinit(bean1),beforeinit(bean2),beforeinit(bean3),init(my-bean-1),init(my-bean-2),init(my-bean-3),afterinit(bean1),afterinit(bean2),afterinit(bean3)");
+            // check the lifecycle order. It's especially important that the leaf components are initialized before the node components
+            expect(testling.getEvents().join(",")).toBe("beforeinit(bean3),beforeinit(bean2),beforeinit(bean1),init(my-bean-3),init(my-bean-2),init(my-bean-1),afterinit(bean3),afterinit(bean2),afterinit(bean1)");
 
-            expect(testling.getComponentNames().join(",")).toBe("bean1,bean2,bean3");
+            // check all names
+            expect(testling.getComponentNames().join(",")).toBe("bean3,bean2,bean1");
 
             // destroy
             testling.destroy().then(() => {
@@ -62,7 +63,8 @@ describe("FunctionComponentFactoryBase", function():void {
         });
 
         runs(function() {
-            expect(testling.getEvents().join(",")).toBe("");
+            // check the destruction order. make sure that the destruction takes place in reverse order than init
+            expect(testling.getEvents().join(",")).toBe("beforeinit(bean3),beforeinit(bean2),beforeinit(bean1),init(my-bean-3),init(my-bean-2),init(my-bean-1),afterinit(bean3),afterinit(bean2),afterinit(bean1),beforedestroy(bean1),beforedestroy(bean2),beforedestroy(bean3),destroy(my-bean-1),destroy(my-bean-2),destroy(my-bean-3),afterdestroy(bean1),afterdestroy(bean2),afterdestroy(bean3)");
         });
     })
 });
@@ -186,16 +188,16 @@ class MyComponentProcessor implements ComponentProcessor {
 
     public processAfterInit(name:string, component:Object):Promise<any> {
         this._events.push("afterinit("+name+")");
-        return Promise.resolve(component);;
+        return Promise.resolve(component);
     }
 
     public processAfterDestroy(name:string, component:Object):Promise<any> {
-        this._events.push("beforedestroy("+name+")");
-        return Promise.resolve(component);;
+        this._events.push("afterdestroy("+name+")");
+        return Promise.resolve(component);
     }
 
     public processBeforeDestroy(name:string, component:Object):Promise<any> {
-        this._events.push("afterdestroy("+name+")");
-        return Promise.resolve(component);;
+        this._events.push("beforedestroy("+name+")");
+        return Promise.resolve(component);
     }
 }
