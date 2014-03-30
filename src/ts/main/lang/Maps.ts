@@ -25,7 +25,7 @@ class Maps {
     /**
      * @return The map's keys
      */
-    public static keys<K, V>(m:Map<K, V>) {
+    public static keys<K, V>(m:Map<K, V>):K[] {
         if( typeof m['keys'] === 'function' ) {
             return m['keys']();
         }
@@ -44,7 +44,7 @@ class Maps {
     /**
      * @return The map's values
      */
-    public static values<K, V>(m:Map<K, V>) {
+    public static values<K, V>(m:Map<K, V>):V[] {
         if( typeof m['values'] === 'function' ) {
             return m['values']();
         }
