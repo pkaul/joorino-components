@@ -175,21 +175,16 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         this.initializeBuild();
 
         // trigger creation of all beans ...
-        return this.getOrCreateComponents(componentNames).then((components:any[]) => {
+        return this.getOrCreateComponents(componentNames).then((components:Map<string,Object>) => {
 
-            // ---- ALL components have been created now.
-            // copy them to the final structure
-            var result:Map<string, Object> = Maps.createMap<Object>(true);     // order is important
-            for( var i:number=0;i<componentNames.length; i++ ) {
-                result.set(componentNames[i], components[i]);
-            }
+            // all components have been created now.
             // ... clean up ...
             this.cleanupBuild();
 
             this.getLogger().debug("Creating components {0} has been finished", componentNames);
 
             // ... and return
-            return Promise.resolve(result);
+            return Promise.resolve(components);
         });
     }
 
@@ -209,21 +204,14 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         }
 
         this.getLogger().debug("Resolving dependencies [{0}] ...", dependencyNames);
-        return this.getOrCreateComponents(dependencyNames).then((dependencies:Object[]) => {
+        return this.getOrCreateComponents(dependencyNames).then((dependencies:Map<string,Object>) => {
 
-            this.getLogger().debug("Resolved dependencies [{0}] to {1}", dependencyNames, dependencies);
-
-            // copy dependencies into the map
-            var result:Map<string, Object> = Maps.createMap();
-            for( var k:number = 0; k<dependencyNames.length; k++ ) {
-
-                var dependencyName:string = dependencyNames[k];
-                var dependencyComponent:Object = dependencies[k];
-                result.set(dependencyName, dependencyComponent);
+            if( this.getLogger().isDebugEnabled() ) {
+                this.getLogger().debug("Resolved dependencies [{0}] to {1}", dependencyNames, Maps.values(dependencies));
             }
 
-            // return the map
-            return Promise.resolve(result);
+            // return the dependencies as a map
+            return Promise.resolve(dependencies);
         });
     }
 
@@ -249,8 +237,9 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
     /**
      * Gets or creates a list of components sequentially
      * @param componentNames The names of the components.
+     * @return The components
      */
-    private getOrCreateComponents(componentNames:string[]):Promise<Object[]> {
+    private getOrCreateComponents(componentNames:string[]):Promise<Map<string,Object>> {
 
         // get or create the first/next in the list
         var next:string = componentNames[0];
@@ -258,12 +247,15 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             if( componentNames.length == 1 ) {
                 // this was the last one. return the result
-                return Promise.resolve([component]);
+                var result:Map<string,Object> = Maps.createMap(true);
+                result.set(next, component);
+                return Promise.resolve(result);
             }
             else {
                 // still elements to process. process the remaining
-                return this.getOrCreateComponents(componentNames.slice(1)).then((components:any[]) => {
-                    return Promise.resolve([component].concat(components));
+                return this.getOrCreateComponents(componentNames.slice(1)).then((components:Map<string,Object>) => {
+                    components.set(next, component);
+                    return Promise.resolve(components);
                 });
             }
         });
