@@ -105,7 +105,10 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
      */
     private assertInitialized():void {
         if( this._state < ComponentBase.STATE_INITIALIZED || this._state >= ComponentBase.STATE_DESTROYED ) {
-            throw Errors.createIllegalStateError("Component "+this+" is not or no more 'initialized' but in state '"+this.getStateAsString()+"'");
+            throw Errors.createIllegalStateError("Component "+this+" is not in state 'initialized' but in state '"+this.getStateAsString()+"'");
+        }
+        else if (this._state >= ComponentBase.STATE_DESTROYED) {
+            throw Errors.createIllegalStateError("Component "+this+" is already in state '"+this.getStateAsString()+"'");
         }
     }
 
