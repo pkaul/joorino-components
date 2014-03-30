@@ -179,14 +179,14 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             // ---- ALL components have been created now.
             // copy them to the final structure
-            var result:Map<string, Object> = Maps.createMap<Object>();
+            var result:Map<string, Object> = Maps.createMap<Object>(true);     // order is important
             for( var i:number=0;i<componentNames.length; i++ ) {
                 result.set(componentNames[i], components[i]);
             }
             // ... clean up ...
             this.cleanupBuild();
 
-            this.getLogger().debug("Creating components {0} has been finished: {1}", componentNames, result);
+            this.getLogger().debug("Creating components {0} has been finished", componentNames);
 
             // ... and return
             return Promise.resolve(result);
@@ -205,7 +205,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         if( dependencyNames.length === 0 ) {
             // no dependencies. return immediately
             this.getLogger().debug("No dependencies to resolve");
-            return Promise.resolve(Maps.createMap(false));
+            return Promise.resolve(Maps.createMap());
         }
 
         this.getLogger().debug("Resolving dependencies [{0}] ...", dependencyNames);
@@ -214,7 +214,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
             this.getLogger().debug("Resolved dependencies [{0}] to {1}", dependencyNames, dependencies);
 
             // copy dependencies into the map
-            var result:Map<string, Object> = Maps.createMap(false);
+            var result:Map<string, Object> = Maps.createMap();
             for( var k:number = 0; k<dependencyNames.length; k++ ) {
 
                 var dependencyName:string = dependencyNames[k];
