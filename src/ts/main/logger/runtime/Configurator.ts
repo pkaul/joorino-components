@@ -9,7 +9,7 @@ import ConsoleAppender = require("./appender/ConsoleAppender");
 /**
  * A simple logging configurator
  */
-class SimpleConfigurator {
+class Configurator {
 
     /**
      * Configures the entire logging engine to log everyhing with a certain level
@@ -27,12 +27,12 @@ class SimpleConfigurator {
     }
 
     public toString():string {
-        return "SimpleConfigurator[]";
+        return "Configurator[]";
     }
 
 }
 
-export = SimpleConfigurator;
+export = Configurator;
 
 
 
