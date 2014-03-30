@@ -14,7 +14,7 @@ describe("ComponentProcessors", function():void {
      */
     it("testLifecycle", function():void {
 
-        // logger.SimpleConfigurator.configure("debug");
+        // logger.Configurator.configure("debug");
 
         var finished:boolean = false;
 

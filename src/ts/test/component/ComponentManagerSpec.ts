@@ -4,7 +4,7 @@ import ComponentManager = require("../../main/component/manager/ComponentManager
 import ComponentBase = require("../../main/component/ComponentBase");
 import TestLifecycleBean = require("./TestComponent");
 
-//import SimpleConfigurator = require("../../main/logger/runtime/SimpleConfigurator");
+//import Configurator = require("../../main/logger/runtime/Configurator");
 
 /**
  * Tests {@link ComponentManager}
@@ -16,7 +16,7 @@ describe("ComponentManager", function():void {
      */
     it("testLifeCycle", function():void {
 
-        //SimpleConfigurator.configure("debug");
+        //Configurator.configure("debug");
 
         var testling:ComponentManager = new ComponentManager();
 
