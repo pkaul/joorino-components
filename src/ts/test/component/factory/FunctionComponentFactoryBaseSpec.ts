@@ -4,14 +4,14 @@ import Initializable = require("../../../main/component/Initializable");
 import Destroyable = require("../../../main/component/Destroyable");
 import FunctionComponentFactoryBase = require("../../../main/component/factory/FunctionComponentFactoryBase");
 import ComponentProcessor = require("../../../main/component/factory/ComponentProcessor");
-import Configurator = require("../../../main/logger/runtime/Configurator");
+//import Configurator = require("../../../main/logger/runtime/Configurator");
 
 /**
  * Tests {@link FunctionComponentFactoryBase}
  */
 describe("FunctionComponentFactoryBase", function():void {
 
-    Configurator.configure("debug");
+    //Configurator.configure("debug");
 
     /**
      * Tests that all components are created and wired correctly for an example {@link TestFunctionComponentFactory}
