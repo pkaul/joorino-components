@@ -135,7 +135,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
     /**
      * @return The names of all (locally) created components in the order of creation
-     * [PROTECTED]
+     * @protected
      */
     public getComponentNames():string[] {
         if( this._components === null ) {
@@ -149,8 +149,8 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Should delegate to {@link  #doBuildBeans}
      *
      * @return The promise containing the builded components
+     * @protected
      */
-        // [PROTECTED]
     public buildComponents():Promise<Map<string, Object>> {
         throw Errors.createAbstractFunctionError("buildComponents");
     }
@@ -160,8 +160,8 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Creates a component and populates its properties. TO BE IMPLEMENTED by custom implementation.
      * @param componentName The component name
      * @return The promise containing the created and populated component
+     * @protected
      */
-        // [PROTECTED]
     public doCreateComponent(componentName:string):Promise<Object> {
         throw Errors.createAbstractFunctionError("createComponent");
     }
@@ -173,7 +173,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Triggers building named components. This will resulting in invocations of {@link #createComponent}
      * @param componentNames The (unordered) names of the components to be built
      * @return A promise containing all built components as a map name -> component.
-     * [PROTECTED]
+     * @protected
      */
     public doBuildBeans(componentNames:string[]):Promise<Map<string, Object>> {
 
@@ -199,7 +199,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Provides dependencies that are required by the current component
      * @param dependencyNames The names of the (dependency) components that shall be resolved
      * @return The promise containing the resolved dependencies
-     * [PROTECTED]
+     * @protected
      */
     public resolveDependencies(dependencyNames:string[]):Promise<Map<string, Object>> {
 

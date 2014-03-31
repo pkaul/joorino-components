@@ -56,8 +56,8 @@ class ObjectBase implements EventSubscriber, Identifiable {
 
     /**
      * @see assert
+     * @protected
      */
-    // [PROTECTED]
     public assert(condition:boolean, message?:string, p1?:any, p2?:any, p3?:any, p4?:any, p5?:any):void {
         assert(condition, message, p1, p2, p3, p4, p5);
     }
@@ -65,7 +65,7 @@ class ObjectBase implements EventSubscriber, Identifiable {
 
     /**
      * @return A logger for this instance
-     * [PROTECTED]
+     * @protected
      */
     public getLogger():Logger {
         if( this._log === null || this._log === undefined ) {
@@ -75,12 +75,16 @@ class ObjectBase implements EventSubscriber, Identifiable {
         return this._log;
     }
 
-    // [PROTECTED]
+    /**
+     * @protected
+     */
     public getEventPublisher():EventPublisher {
         return this.getEventHub();
     }
 
-    // [PROTECTED]
+    /**
+     * @protected
+     */
     public getName():string {
         if( this._name === undefined || this._name === null) {
             this._name = Classes.getClassName(this);
@@ -91,7 +95,7 @@ class ObjectBase implements EventSubscriber, Identifiable {
 
     /**
      * An number for this instance. To be internally used for identification.
-     * [PROTECTED]
+     * @protected
      */
     public getInstanceNumber():number {
         if(this._instanceNumber === undefined )  {
