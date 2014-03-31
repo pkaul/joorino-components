@@ -3,7 +3,7 @@
 import ComponentBase = require("../component/ComponentBase");
 import Components = require("../component/Components");
 import ComponentManager = require("../component/manager/ComponentManager");
-import FrameRunner = require("./Runner");
+import Runner = require("./Runner");
 import ComponentManagerRunnable = require("./../component/manager/ComponentManagerRunnable");
 import Scene = require("./Scene");
 import Runnable = require("./../component/Runnable");
@@ -38,13 +38,17 @@ class SceneBase extends ComponentBase implements Scene {
             this._componentManager = new ComponentManager(this.getName()+"-components");
             return this._componentManager.init().then(() => {
 
-                // setting up a adapter for invoking #run of all Runnables that are registered in the ComponentManager
-                this._runnables = new ComponentManagerRunnable(this._componentManager);
-                this._componentManager.register(this._runnables);
+                var runner:Runner = this.createRunner(() => this.doRun());
+                if( !!runner ) {
 
-                // ... and invoke this adapters continuously
-                var runner:FrameRunner = new FrameRunner(() => this.doRun(), 60, this.getName()+"-runner");
-                this._componentManager.register(runner);  // will be started when starting the ComponentManager!
+                    // setting up a adapter for invoking #run of all Runnables that are registered in the ComponentManager
+                    this._runnables = new ComponentManagerRunnable(this._componentManager);
+                    this._componentManager.register(this._runnables);
+
+                    // register the runner so that it will be managed by component manager,
+                    //  e.g. it will be started when starting the ComponentManager!
+                    this._componentManager.register(runner);
+                }
 
                 return Promise.resolve();
             });
@@ -138,6 +142,16 @@ class SceneBase extends ComponentBase implements Scene {
         return this._finished;
     }
 
+
+    /**
+     * Creates a runner instance to be used for this scene. Override this function for a scene specific instance.
+     * @param executable The function to executed continuously by the runner.
+     * @return The runner or null if this scene shouldn't use a runner.
+     * @protected
+     */
+    public createRunner(executable:() => void):Runner {
+        return new Runner(executable, 60, this.getName()+"-runner");
+    }
 
     // =======
 
