@@ -41,7 +41,6 @@ module.exports = function(grunt) {
                 src: ['<%= dir.source_ts %>/**/*.ts'],
                 outDir: '<%= dir.target_js %>',
                 options: {
-                    base_path: '<%= dir.source_ts %>',
                     target: 'es3',
                     declaration: true,
                     removeComments: false,
@@ -143,6 +142,19 @@ module.exports = function(grunt) {
             }
         },
 
+        // Fixing invalid <reference path=""> references that are expanded  by compiler or grunt-ts in *.d.ts
+        // https://www.npmjs.org/package/grunt-text-replace
+        replace: {
+            fix_references: {
+                src: ['<%= dir.target_js %>/**/*.d.ts'],
+                overwrite: true,
+                replacements: [{
+                    from: '../../src/ts/',
+                    to: ''
+                }]
+            }
+        },
+
         // build a module archive containing all *.js and *.d.ts files as well as bower.json
         compress: {
             distribution: {
@@ -169,7 +181,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-compress');
     grunt.loadNpmTasks('grunt-tsd');
     grunt.loadNpmTasks('grunt-bower-task');
+    grunt.loadNpmTasks('grunt-text-replace');
 
     // Default task(s).
-    grunt.registerTask('default', ['bower:runtime-dependencies','tsd:compile-dependencies','ts:compile','jasmine:tests','compress:distribution']);
+    grunt.registerTask('default', ['bower:runtime-dependencies','tsd:compile-dependencies','ts:compile','replace:fix_references','jasmine:tests','compress:distribution']);
 };

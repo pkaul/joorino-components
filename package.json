@@ -1,17 +1,18 @@
 {
-    "name": "joorino",
-    "version": "0.9.1",
-    "dependencies": {},
-    "devDependencies": {
-        "grunt": "~0.4.1",
-        "grunt-ts" : "~1.7.2",
-        "typescript" : "0.9.7",
-        "grunt-contrib-clean": "~0.5.0",
-        "grunt-contrib-jasmine": "~0.5.2",
-        "grunt-template-jasmine-istanbul": "~0.2.5",
-        "grunt-template-jasmine-requirejs": "~0.1.7",
-        "grunt-contrib-compress": "~0.7.0",
-        "grunt-tsd": "0.0.4",
-        "grunt-bower-task": "^0.3.4"
-    }
+  "name": "joorino",
+  "version": "0.9.1",
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-ts": "~1.11.4",
+    "typescript": "1.0.1",
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-jasmine": "~0.5.2",
+    "grunt-template-jasmine-istanbul": "~0.2.5",
+    "grunt-template-jasmine-requirejs": "~0.1.7",
+    "grunt-contrib-compress": "~0.7.0",
+    "grunt-tsd": "0.0.4",
+    "grunt-bower-task": "^0.3.4",
+    "grunt-text-replace": "^0.3.12"
+  }
 }
