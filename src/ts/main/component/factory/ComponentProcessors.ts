@@ -12,7 +12,7 @@ import assert = require("../../lang/assert");
  */
 class ComponentProcessors {
 
-    private static LOG:Logger = LoggerFactory.getLogger(ComponentProcessors);
+    private static LOG:Logger;
 
     /**
      * Invokes {@link ComponentProcessor#processBeforeInit} on several bean processors for a several bean
@@ -41,7 +41,7 @@ class ComponentProcessors {
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(result:any) => void,reject:(error:any) => void) => {
             var keys:string[] = Maps.keys(components);
-            ComponentProcessors.LOG.warn("Timeout on pre-init components: {0}", keys);
+            ComponentProcessors.getLogger().warn("Timeout on pre-init components: {0}", keys);
             reject("Timeout on pre-init components: "+keys);
         }, warnTimeout);
     }
@@ -69,7 +69,7 @@ class ComponentProcessors {
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(result:any) => void,reject:(error:any) => void) => {
             var keys:string[] = Maps.keys(components);
-            ComponentProcessors.LOG.warn("Timeout on post-init components: {0}", keys);
+            ComponentProcessors.getLogger().warn("Timeout on post-init components: {0}", keys);
             reject("Timeout on post-init components: "+keys);
         }, warnTimeout);
     }
@@ -96,7 +96,7 @@ class ComponentProcessors {
         }
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(result:any) => void,reject:(error:any) => void) => {
-            ComponentProcessors.LOG.warn("Timeout on pre-destroying components: {0}", componentNames);
+            ComponentProcessors.getLogger().warn("Timeout on pre-destroying components: {0}", componentNames);
             reject("Timeout on pre-destroying components: "+componentNames);
         }, warnTimeout);
     }
@@ -124,9 +124,16 @@ class ComponentProcessors {
         }
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(result:any) => void,reject:(error:any) => void) => {
-            ComponentProcessors.LOG.warn("Timeout on post-destroying components: {0}", componentNames);
+            ComponentProcessors.getLogger().warn("Timeout on post-destroying components: {0}", componentNames);
             reject("Timeout on post-destroying components: "+componentNames);
         }, warnTimeout);
+    }
+
+    private static getLogger():Logger {
+        if( !ComponentProcessors.LOG ) {
+            ComponentProcessors.LOG = LoggerFactory.getLogger(ComponentProcessors);
+        }
+        return ComponentProcessors.LOG;
     }
 }
 

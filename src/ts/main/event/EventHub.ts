@@ -11,7 +11,7 @@ import Maps = require("../lang/Maps");
  */
 class EventHub implements EventSubscriber, EventPublisher {
 
-    private static LOG:Logger = LoggerFactory.getLogger(EventHub);
+    private static LOG:Logger;
     private _name:string;
     private _warnThreshold:number = -1;
     private _listeners:Map<string, Function[]> = Maps.createMap<Function[]>();
@@ -71,7 +71,7 @@ class EventHub implements EventSubscriber, EventPublisher {
                 }
                 catch(e) {
                     // just write a log message
-                    EventHub.LOG.warn("Error notifying listener {0} about event {1}", listener, name, e);
+                    EventHub.getLogger().warn("Error notifying listener {0} about event {1}", listener, name, e);
                 }
             }
         }
@@ -103,7 +103,7 @@ class EventHub implements EventSubscriber, EventPublisher {
         }
 
         if( this._warnThreshold > -1 && listeners.length >= this._warnThreshold ) {
-            EventHub.LOG.warn("EventHub {0} reached limit of {1} entries for event {2}", this._name, this._warnThreshold, eventName);
+            EventHub.getLogger().warn("EventHub {0} reached limit of {1} entries for event {2}", this._name, this._warnThreshold, eventName);
         }
 
         listeners.push(listener);
@@ -129,12 +129,19 @@ class EventHub implements EventSubscriber, EventPublisher {
 
             if( !found ) {
                 throw Errors.createIllegalArgumentError("Event listener "+listener+" is not registered for event "+eventName);
-                //EventHubt.LOG.warn("Couldn't unregister event listener {0} for event {1} since it does not exist", listener, eventName);
+                //EventHubt.getLogger().warn("Couldn't unregister event listener {0} for event {1} since it does not exist", listener, eventName);
             }
         }
         else {
             throw Errors.createIllegalArgumentError("Event listener "+listener+" is not registered for event "+eventName);
         }
+    }
+
+    private static getLogger():Logger {
+        if( !EventHub.LOG ) {
+            EventHub.LOG = LoggerFactory.getLogger(EventHub);
+        }
+        return EventHub.LOG;
     }
 }
 

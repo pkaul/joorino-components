@@ -13,7 +13,7 @@ import EventPublisher = require("../event/EventPublisher");
  */
 class Components {
 
-    private static LOG:Logger = LoggerFactory.getLogger(Components);
+    private static LOG:Logger;
 
     /**
       * Event that is fired when a bean has been started.
@@ -135,12 +135,12 @@ class Components {
                 var p:Promise<any> = d.init();
 
                 return Promises.withTimeout(p, (resolve:(value:any) => void, reject:(error:any) => void) => {
-                    Components.LOG.warn("Timeout on initializing {0}", obj);
+                    Components.getLogger().warn("Timeout on initializing {0}", obj);
                     reject("Timeout on initializing "+obj);
                 }, warnTimeout);
 
             } catch (e) {
-                Components.LOG.warn("Error initializing {0}", obj, e);
+                Components.getLogger().warn("Error initializing {0}", obj, e);
                 throw e;
             }
         }
@@ -163,12 +163,12 @@ class Components {
                 var p:Promise<any> = d.destroy();
 
                 return Promises.withTimeout(p, (resolve:(value:any) => void, reject:(error:any) => void) => {
-                    Components.LOG.warn("Timeout on destroying {0}", obj);
+                    Components.getLogger().warn("Timeout on destroying {0}", obj);
                     reject("Timeout on destroying "+obj);
                 }, warnTimeout);
 
             } catch (e) {
-                Components.LOG.warn("Error destroying {0}", obj, e);
+                Components.getLogger().warn("Error destroying {0}", obj, e);
                 throw e;
             }
         }
@@ -225,7 +225,7 @@ class Components {
                     promises.push(p);
                 }
                 catch (e) {
-                    Components.LOG.warn("Error destroying {0}", components[i], e);
+                    Components.getLogger().warn("Error destroying {0}", components[i], e);
                     // bubbling up
                     throw e;
                 }
@@ -238,7 +238,7 @@ class Components {
         }
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(value:any) => void, reject:(error:any) => void) => {
-            Components.LOG.warn("Timeout on destroying components: {0}", components);
+            Components.getLogger().warn("Timeout on destroying components: {0}", components);
             reject("Timeout on destroying components concurrently: "+components)
         }, warnTimeout);
     }
@@ -260,7 +260,7 @@ class Components {
                     promises.push(p);
                 }
                 catch (e) {
-                    Components.LOG.warn("Error initializing {0}", components[i], e);
+                    Components.getLogger().warn("Error initializing {0}", components[i], e);
                     // bubbling up
                     throw e;
                 }
@@ -273,9 +273,18 @@ class Components {
         }
 
         return Promises.withTimeout(Promise.all(promises), (resolve:(value:any) => void, reject:(error:any) => void) => {
-            Components.LOG.warn("Timeout on initializing components concurrently: {0}", components);
+            Components.getLogger().warn("Timeout on initializing components concurrently: {0}", components);
             reject("Timeout on initializing components concurrently: "+components)
         }, warnTimeout);
+    }
+
+    // ===========
+
+    private static getLogger():Logger {
+        if( !Components.LOG ) {
+            Components.LOG = LoggerFactory.getLogger(Components);
+        }
+        return Components.LOG;
     }
 
 }
