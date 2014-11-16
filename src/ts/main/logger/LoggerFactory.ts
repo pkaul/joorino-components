@@ -56,15 +56,15 @@ class LoggerFactory {
 
     // a default logger instance
     private static DEFAULT:Logger = new WarnErrorLogger();
+    private static NAME:string = 'loggerfactory';
 
-    private static delegate:Function = null;
 
     /**
      * Binds a function for creating logger instances on this factory
      * @param factory The factory. It is expected that it has a function 'getLogger(name:String)'
      */
-    public static bind(factory:Function):void {
-        LoggerFactory.delegate = factory;
+    public static bind(factory:(name:any) => Logger):void {
+        LoggerFactory.getJoorinoConfig()[LoggerFactory.NAME] = factory;
     }
 
     /**
@@ -76,9 +76,10 @@ class LoggerFactory {
 
         var result:Logger;
 
-        if( LoggerFactory.delegate !== null ) {
+        var factoryFunction:(name:any) => Logger = <(name:any) => Logger> LoggerFactory.getJoorinoConfig()[LoggerFactory.NAME];
+        if( typeof factoryFunction === 'function' ) {
             // there is a delegate. invoke it.
-            result = LoggerFactory.delegate(name);
+            result = factoryFunction(name);
         }
         else {
             // if it does not exist: Use the default
@@ -87,7 +88,28 @@ class LoggerFactory {
 
         return result;
     }
+
+    // =================
+
+    private static getJoorinoConfig():Object {
+
+        if( window ) {
+             if( !window['joorino'] ) {
+                window['joorino'] = {};
+            }
+             return window['joorino'];
+        }
+        else {
+            // TODO find something better for node.js
+            return {};
+        }
+    }
+
+
 }
+
+// The global joorino config
+declare var joorino:any;
 
 
 export = LoggerFactory;

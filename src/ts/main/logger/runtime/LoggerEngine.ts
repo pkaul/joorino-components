@@ -60,7 +60,7 @@ class LoggerEngine {
     public static bind():void {
 
         var engine:LoggerEngine = LoggerEngine.getInstance();
-        var factoryFunction:Function = function(name:any) {
+        var factoryFunction:(name:any) => Logger = (name:any) => {
             return engine.getLogger(name)
         };
 
