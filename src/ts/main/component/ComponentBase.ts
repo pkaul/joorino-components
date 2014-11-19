@@ -36,7 +36,7 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
         this.assertNotInitialized();
         this._state = ComponentBase.STATE_INITIALIZED;
         Components.publishInitialized(this.getEventPublisher(), this);
-        this.getLogger().info("Initialized");
+        //this.getLogger().info("Initialized");
         return Promise.resolve();
     }
 
@@ -49,7 +49,6 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
             // not destroyed yet
             this._state = ComponentBase.STATE_DESTROYED;
             Components.publishDestroyed(this.getEventPublisher(), this);
-            this.getLogger().info("Destroyed");
         }
         return Promise.resolve();
     }

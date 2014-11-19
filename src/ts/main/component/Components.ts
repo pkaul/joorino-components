@@ -137,6 +137,10 @@ class Components {
                     Components.getLogger().warn("Error initializing {0}", obj, error);
                     return Promise.reject(error); // bubbling up
                 });
+                p.then((v:any) => {
+                    Components.getLogger().debug("Initialized {0}", obj);
+                    return Promise.resolve(v);  // bubbling up
+                });
 
                 return Promises.withTimeout(p, (resolve:(value:any) => void, reject:(error:any) => void) => {
                     Components.getLogger().warn("Timeout on initializing {0}", obj);
@@ -168,6 +172,10 @@ class Components {
                 p.catch((error) => {
                     Components.getLogger().warn("Error destroying {0}", obj, error);
                     return Promise.reject(error); // bubbling up
+                });
+                p.then((v:any) => {
+                    Components.getLogger().debug("Destroyed {0}", obj);
+                    return Promise.resolve(v);  // bubbling up
                 });
 
                 return Promises.withTimeout(p, (resolve:(value:any) => void, reject:(error:any) => void) => {
@@ -234,6 +242,10 @@ class Components {
                     try {
 
                         var p:Promise<any> = d.destroy();
+                        p.then((v:any) => {
+                            Components.getLogger().debug("Destroyed {0}", d);
+                            return Promise.resolve(v);  // bubbling up
+                        });
                         p.catch((error) => {
                             Components.getLogger().warn("Error destroying {0}", component, error);
                             return Promise.reject(error); // bubbling up
@@ -275,6 +287,10 @@ class Components {
                     var d:Initializable = (<Initializable> component);
                     try {
                         var p:Promise<any> = d.init();
+                        p.then((v:any) => {
+                            Components.getLogger().debug("Initialized {0}", component);
+                            return Promise.resolve(v);  // bubbling up
+                        });
                         p.catch((error) => {
                             Components.getLogger().warn("Error initializing {0}", component, error);
                             return Promise.reject(error); // bubbling up
