@@ -12,7 +12,7 @@
     "grunt-template-jasmine-requirejs": "~0.1.7",
     "grunt-contrib-compress": "~0.7.0",
     "grunt-tsd": "0.0.4",
-    "grunt-bower-task": "^0.3.4",
+    "grunt-bower-task": "^0.4.0",
     "grunt-text-replace": "^0.3.12"
   }
 }
