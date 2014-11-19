@@ -200,6 +200,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * @param dependencyNames The names of the (dependency) components that shall be resolved
      * @return The promise containing the resolved dependencies
      * @protected
+     * @deprecated Use {@link #require}
      */
     public resolveDependencies(dependencyNames:string[]):Promise<Map<string, Object>> {
 
@@ -218,6 +219,25 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             // return the dependencies as a map
             return Promise.resolve(dependencies);
+        });
+    }
+
+    /**
+     * Provides dependencies that are required by the current component
+     * @param dependencyNames The names of the (dependency) components that shall be resolved
+     * @return The promise containing the resolved dependencies
+     * @protected
+     */
+    public require(dependencyNames:string[]):Promise<Object[]> {
+
+        return this.resolveDependencies(dependencyNames).then((dependencies:Map<string, Object>) => {
+
+            // copy map structure into more simple list structure
+            var result:Object[] = [];
+            for( var i:number = 0; i<dependencyNames.length; i++ ) {
+                result.push(dependencies.get(dependencyNames[i]));
+            }
+            return Promise.resolve(result);
         });
     }
 
