@@ -96,7 +96,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
                 });
             });
         }).catch((error:any) => {
-            this.getLogger().error("Error initializing components: {0}", error);
+            this.getLogger().error("Error building components: {0}", error);
         });
     }
 
@@ -181,16 +181,17 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         this.initializeBuild();
 
         // trigger creation of all beans ...
-        return this.getOrCreateComponents(componentNames).then((components:Map<string,Object>) => {
+        return this.getOrCreateComponents(componentNames).then(() => {
 
             // all components have been created now.
+            var result:Map<string,Object> = this._buildComponents;
             // ... clean up ...
             this.cleanupBuild();
 
             this.getLogger().debug("Creating components {0} has been finished", componentNames);
 
             // ... and return
-            return Promise.resolve(components);
+            return Promise.resolve(result);
         });
     }
 
@@ -272,16 +273,13 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         return this.getOrCreateComponent(next).then((component:any) => {
 
             if( componentNames.length == 1 ) {
-                // this was the last one. return the result
-                var result:Map<string,Object> = Maps.createMap(true);
-                result.set(next, component);
-                return Promise.resolve(result);
+                // this was the last one.
+                return Promise.resolve(this._buildComponents);
             }
             else {
                 // still elements to process. process the remaining
-                return this.getOrCreateComponents(componentNames.slice(1)).then((components:Map<string,Object>) => {
-                    components.set(next, component);
-                    return Promise.resolve(components);
+                return this.getOrCreateComponents(componentNames.slice(1)).then(() => {
+                    return Promise.resolve(this._buildComponents);
                 });
             }
         });
