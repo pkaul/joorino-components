@@ -170,7 +170,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
 
     /**
-     * Triggers building named components. This will resulting in invocations of {@link #createComponent}
+     * Triggers building named components. This will result in invocations of {@link #createComponent}
      * @param componentNames The (unordered) names of the components to be built
      * @return A promise containing all built components as a map name -> component.
      * @protected
