@@ -89,10 +89,10 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
      * test factory function for creating bean "bean2"
      */
     private createComponentBean2():Promise<Object> {
-        return this.resolveDependencies(["bean3"]).then((dependencies:Map<string,Object>) => {
+        return this.require(["bean3"]).then((dependencies:Object[]) => {
             var bean:MyComponent = new MyComponent(this._events);
             bean.setName("my-bean-2");
-            bean.setReference(dependencies.get('bean3'));
+            bean.setReference(dependencies[0]);
             return Promise.resolve(bean);
         });
     }
@@ -102,9 +102,9 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
      */
     private createComponentBean1():Promise<Object> {
 
-        return this.resolveDependencies(["bean2", "bean3"]).then((dependencies:Map<string,Object>) => {
+        return this.require(["bean2", "bean3"]).then((dependencies:Object[]) => {
             var bean:MyComponent = new MyComponent(this._events);
-            bean.setReference(dependencies.get('bean2'));
+            bean.setReference(dependencies[0]);
             bean.setName("my-bean-1");
             return Promise.resolve(bean);
         });
