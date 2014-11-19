@@ -133,6 +133,10 @@ class Components {
 
                 var d:Initializable = <Initializable> obj;
                 var p:Promise<any> = d.init();
+                p.catch((error) => {
+                    Components.getLogger().warn("Error initializing {0}", obj, error);
+                    return Promise.reject(error); // bubbling up
+                });
 
                 return Promises.withTimeout(p, (resolve:(value:any) => void, reject:(error:any) => void) => {
                     Components.getLogger().warn("Timeout on initializing {0}", obj);
@@ -141,7 +145,7 @@ class Components {
 
             } catch (e) {
                 Components.getLogger().warn("Error initializing {0}", obj, e);
-                throw e;
+                throw e; // bubbling up
             }
         }
         else {
@@ -161,6 +165,10 @@ class Components {
 
                 var d:Destroyable = <Destroyable> obj;
                 var p:Promise<any> = d.destroy();
+                p.catch((error) => {
+                    Components.getLogger().warn("Error destroying {0}", obj, error);
+                    return Promise.reject(error); // bubbling up
+                });
 
                 return Promises.withTimeout(p, (resolve:(value:any) => void, reject:(error:any) => void) => {
                     Components.getLogger().warn("Timeout on destroying {0}", obj);
@@ -169,7 +177,7 @@ class Components {
 
             } catch (e) {
                 Components.getLogger().warn("Error destroying {0}", obj, e);
-                throw e;
+                throw e;  // bubbling up
             }
         }
         else {
@@ -217,19 +225,27 @@ class Components {
 
         var promises:Promise<any>[] = [];
         for( var i:number = 0; i<components.length; i++ ) {
-            if( Components.isDestroyable(components[i])) {
 
-                var d:Destroyable = (<Destroyable> components[i]);
-                try {
-                    var p:Promise<any> = d.destroy();
-                    promises.push(p);
+            ((component:any) => {
+
+                if( Components.isDestroyable(component)) {
+
+                    var d:Destroyable = (<Destroyable> component);
+                    try {
+
+                        var p:Promise<any> = d.destroy();
+                        p.catch((error) => {
+                            Components.getLogger().warn("Error destroying {0}", component, error);
+                            return Promise.reject(error); // bubbling up
+                        });
+                        promises.push(p);
+                    }
+                    catch (e) {
+                        Components.getLogger().warn("Error destroying {0}", component, e);
+                        throw e; // bubbling up
+                    }
                 }
-                catch (e) {
-                    Components.getLogger().warn("Error destroying {0}", components[i], e);
-                    // bubbling up
-                    throw e;
-                }
-            }
+            })(components[i]);
         }
 
         if( promises.length == 0 ) {
@@ -252,19 +268,25 @@ class Components {
 
         var promises:Promise<any>[] = [];
         for( var i:number = 0; i<components.length; i++ ) {
-            if( Components.isInitializable(components[i])) {
 
-                var d:Initializable = (<Initializable> components[i]);
-                try {
-                    var p:Promise<any> = d.init();
-                    promises.push(p);
+            ((component:any) => {
+                if( Components.isInitializable(component)) {
+
+                    var d:Initializable = (<Initializable> component);
+                    try {
+                        var p:Promise<any> = d.init();
+                        p.catch((error) => {
+                            Components.getLogger().warn("Error initializing {0}", component, error);
+                            return Promise.reject(error); // bubbling up
+                        });
+                        promises.push(p);
+                    }
+                    catch (e) {
+                        Components.getLogger().warn("Error initializing {0}", component, e);
+                        throw e; // bubbling up
+                    }
                 }
-                catch (e) {
-                    Components.getLogger().warn("Error initializing {0}", components[i], e);
-                    // bubbling up
-                    throw e;
-                }
-            }
+            })(components[i]);
         }
 
         if( promises.length == 0 ) {
