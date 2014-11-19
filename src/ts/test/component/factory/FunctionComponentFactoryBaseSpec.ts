@@ -14,7 +14,7 @@ describe("FunctionComponentFactoryBase", function():void {
     //Configurator.configure("debug");
 
     /**
-     * Tests that all components are created and wired correctly for an example {@link TestFunctionComponentFactory}
+     * Tests that all components are created and wired in the correct order. This is done using {@link TestFunctionComponentFactory}
      */
     it("testWiringAndLifecycle", function():void {
 
@@ -46,6 +46,7 @@ describe("FunctionComponentFactoryBase", function():void {
             expect(bean3.getName()).toBe("my-bean-3");
 
             // check the lifecycle order. It's especially important that the leaf components are initialized before the node components
+            // expecting order bean3,bean2,bean1
             expect(testling.getEvents().join(",")).toBe("beforeinit(bean3),beforeinit(bean2),beforeinit(bean1),init(my-bean-3),init(my-bean-2),init(my-bean-1),afterinit(bean3),afterinit(bean2),afterinit(bean1)");
 
             // check all names
@@ -85,26 +86,26 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
     }
 
     /**
-     * test factory function for creating bean "bean1"
+     * test factory function for creating bean "bean2"
      */
-    private createComponentBean1():Promise<Object> {
-
-        return this.resolveDependencies(["bean2", "bean3"]).then((dependencies:Map<string,Object>) => {
+    private createComponentBean2():Promise<Object> {
+        return this.require(["bean3"]).then((dependencies:Object[]) => {
             var bean:MyComponent = new MyComponent(this._events);
-            bean.setReference(dependencies.get('bean2'));
-            bean.setName("my-bean-1");
+            bean.setName("my-bean-2");
+            bean.setReference(dependencies[0]);
             return Promise.resolve(bean);
         });
     }
 
     /**
-     * test factory function for creating bean "bean2"
+     * test factory function for creating bean "bean1"
      */
-    private createComponentBean2():Promise<Object> {
-        return this.resolveDependencies(["bean3"]).then((dependencies:Map<string,Object>) => {
+    private createComponentBean1():Promise<Object> {
+
+        return this.require(["bean2", "bean3"]).then((dependencies:Object[]) => {
             var bean:MyComponent = new MyComponent(this._events);
-            bean.setName("my-bean-2");
-            bean.setReference(dependencies.get('bean3'));
+            bean.setReference(dependencies[0]);
+            bean.setName("my-bean-1");
             return Promise.resolve(bean);
         });
     }
