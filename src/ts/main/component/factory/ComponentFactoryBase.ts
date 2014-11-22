@@ -294,6 +294,9 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
                     return Promise.resolve(this._buildComponents);
                 });
             }
+        }).catch((error:any) => {
+            this.getLogger().error("Error creating component {0}: {1}", next, error);
+            return Promise.reject("Error creating components "+componentNames); // bubble up
         });
 
     }
@@ -329,7 +332,10 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
                 // remove the current name from the stack
                 this._buildDependencyStack.pop();
                 return Promise.resolve(createdComponent);
-            });
+            })/*.catch((error:any) => {
+                this.getLogger().error("Error creating component {0}: {1}", componentName, error);
+                return Promise.reject(error); // bubble up
+            })*/;
         }
     }
 }
