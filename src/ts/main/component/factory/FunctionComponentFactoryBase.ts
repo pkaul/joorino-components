@@ -10,17 +10,17 @@ import Errors = require("../../lang/Errors");
  * Example: An application context consisting of two components "myComponent1" and "myComponent2" where "myComponent2" depends on "myComponent1"
  * may be defined like:
  * <code>
- * public function createMyComponent1(created:Function):void {
+ * public createMyComponent1():Promise<any> {
  *  var component1:Object = ...
- *  created(component1);
+ *  return Promise.resolve(component1);
  * }
  *
- * public function createMyComponent2(created:Function):void {
- *  resolveDependencies(new <String>["myComponent1"], function(dependencies:Object):void {
- *   var component1Dependency = dependencies['myComponent1'];
+ * public createMyComponent2():Promise<any> {
+ *  this.require(["myComponent1"], (dependencies:Object[]) => {
+ *   var component1Dependency = dependencies[0];
  *   var component2:Object = ...
  *   component2.myComponent1 = component1Dependency;
- *   created(component2);
+ *   return Promise.resolve(component2);
  *  }
  * }
  * </code>
