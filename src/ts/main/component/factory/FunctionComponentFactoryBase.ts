@@ -81,7 +81,7 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
                 throw Errors.createIllegalArgumentError("Result of component '"+name+"''s is undefined");
             }
 
-            this.getLogger().info("Component {0} has been created: {1}", name, component);
+            //this.getLogger().info("Component {0} has been created: {1}", name, component);
             return Promise.resolve(component);
         });
     }
