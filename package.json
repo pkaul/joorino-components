@@ -1,6 +1,6 @@
 {
   "name": "joorino",
-  "version": "0.9.1",
+  "version": "1.0.0-beta",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.1",
