@@ -73,6 +73,8 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
 //        var _superInitializable:lifecycle.Initializable = super;
 
+        var concurrent:boolean = this.isConcurrentProcessing();
+
         return this.buildComponents().then((components:Map<string, Object>) => {
 
             this.getLogger().info("Created {0} components: {1}", components.size, Maps.keys(components));
@@ -82,8 +84,8 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
             return ComponentProcessors.processBeforeInit(this._processors, components, this._initTimeout).then(() => {
 
                 // ----------- initialize
-                this.getLogger().info("Initializing");
-                return Components.initAll(Maps.values(components), this._initTimeout).then(() => {
+                this.getLogger().debug("Initializing components {0} {1} ...",  Maps.keys(components), concurrent ? "concurrently" : "sequentially");
+                return Components.initAll(Maps.values(components), concurrent, this._initTimeout).then(() => {
 
                     // ----------- post-initialize
                     this.getLogger().info("Post-Initializing");
@@ -106,16 +108,17 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
             throw Errors.createIllegalStateError("Not initialized or already destroyed");
         }
 
+        var concurrent:boolean = this.isConcurrentProcessing();
         var superDestroy:Function = super.destroy;
         // ----------- pre-destroy
         this.getLogger().debug("Pre-Destroying");
         return ComponentProcessors.processBeforeDestroy(this._processors, this._components, this._destroyTimeout).then(() => {
 
             // --------------- destroy
-            this.getLogger().debug("Destroying");
+            this.getLogger().debug("Destroying components {0} {1} ...", Maps.keys(this._components), concurrent ? "concurrently" : "sequentially");
             var components:Object[] = Maps.values(this._components);
             components.reverse(); // destroy in reverse order!
-            return Components.destroyAll(components, this._destroyTimeout).then(() => {
+            return Components.destroyAll(components, concurrent, this._destroyTimeout).then(() => {
 
                 // -------------- post-destroy
                 this.getLogger().debug("Post-Destroying");
@@ -240,6 +243,15 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
             }
             return Promise.resolve(result);
         });
+    }
+
+    /**
+     * Indicates whether or not the components lifecycle may be processed concurrently. If true, then the lifecycle
+     * may be faster but may also have dependency problems.
+     * @protected
+     */
+    public isConcurrentProcessing():boolean {
+        return false;
     }
 
     // =========================

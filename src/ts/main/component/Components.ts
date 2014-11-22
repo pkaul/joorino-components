@@ -223,13 +223,63 @@ class Components {
         }
     }
 
+    /**
+     * Destroys all given components
+     */
+    public static initAll(components:any[], concurrently:boolean = false, warnTimeout:number = -1):Promise<any> {
+        if(concurrently) {
+            return this.initConcurrently(components, warnTimeout);
+        }
+        else {
+            return this.initSequentially(components, warnTimeout);
+        }
+    }
 
     /**
-     * Destroys several components at once.
+     * Destroys all given components
+     */
+    public static destroyAll(components:any[], concurrently:boolean = false, warnTimeout:number = -1):Promise<any> {
+        if(concurrently) {
+            return this.destroyConcurrently(components, warnTimeout);
+        }
+        else {
+            return this.destroySequentially(components, warnTimeout);
+        }
+    }
+
+
+    /**
+     * Destroys all given components sequentially
+     */
+    public static destroySequentially(components:any[], warnTimeout:number = -1):Promise<any> {
+
+        if( components.length == 0 ) {
+            // we are done
+            return Promise.resolve();
+        }
+
+        var next:any = components[0];
+        var result:Promise<any> = Components.destroy(next).then(() => {
+            // destroy remaining elements
+            return Components.destroySequentially(components.slice(1), -1);
+        });
+
+        if( warnTimeout > 0 ) {
+            result = Promises.withTimeout(result, (resolve:(value:any) => void, reject:(error:any) => void) => {
+                Components.getLogger().warn("Timeout on destroying components: {0}", components);
+                reject("Timeout on destroying components sequentially: "+components)
+            }, warnTimeout*components.length);
+        }
+
+        return result;
+    }
+
+    /**
+     * Destroys several components concurrently.
      * @param components The components
      * @param warnTimeout The timeout in milliseconds after which a warning shall be logged and the destruction shall be handled as 'failed'
      */
-    public static destroyAll(components:any[], warnTimeout:number = -1):Promise<any> {
+    public static destroyConcurrently(components:any[], warnTimeout:number = -1):Promise<any> {
 
         var promises:Promise<any>[] = [];
         for( var i:number = 0; i<components.length; i++ ) {
@@ -272,11 +322,36 @@ class Components {
     }
 
     /**
-     * Initializes several components at once.
+     * Initializes several components sequentially
+     */
+    public static initSequentially(components:any[], warnTimeout:number = -1):Promise<any> {
+
+        if( components.length == 0 ) {
+            // we are done
+            return Promise.resolve();
+        }
+
+        var next:any = components[0];
+
+        var result:Promise<any> = Components.init(next).then(() => {
+            return Components.initSequentially(components.slice(1), -1);
+        });
+
+        if( warnTimeout > 0 ) {
+            result = Promises.withTimeout(result, (resolve:(value:any) => void, reject:(error:any) => void) => {
+                Components.getLogger().warn("Timeout on initializing components: {0}", components);
+                reject("Timeout on initializing components sequentially: "+components)
+            }, warnTimeout*components.length);
+        }
+        return result;
+    }
+
+    /**
+     * Initializes several components concurrently.
      * @param components The components
      * @param warnTimeout The timeout in milliseconds after which a warning shall be logged and the initialization shall be handled as 'failed'
      */
-    public static initAll(components:any[], warnTimeout:number = -1):Promise<any> {
+    public static initConcurrently(components:any[], warnTimeout:number = -1):Promise<any> {
 
         var promises:Promise<any>[] = [];
         for( var i:number = 0; i<components.length; i++ ) {

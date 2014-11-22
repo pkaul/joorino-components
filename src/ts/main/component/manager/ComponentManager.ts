@@ -118,14 +118,14 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
 
     public init():Promise<any> {
         return super.init().then(
-            () => { return Components.initAll(this._components, this._lifecycleTimeout); }
+            () => { return Components.initAll(this._components, this.isConcurrentProcessing(), this._lifecycleTimeout); }
         );
     }
 
 
     public destroy():Promise<any> {
         return super.destroy().then(
-            () => { return Components.destroyAll(this._components, this._lifecycleTimeout); }
+            () => { return Components.destroyAll(this._components, this.isConcurrentProcessing(), this._lifecycleTimeout); }
         );
     }
 
@@ -146,6 +146,19 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
             Components.stop(b);
         }
     }
+
+
+    // ================
+
+    /**
+     * Indicates whether or not the components lifecycle may be processed concurrently. If true, then the lifecycle
+     * may be faster but may also have dependency problems.
+     * @protected
+     */
+    public isConcurrentProcessing():boolean {
+        return false;
+    }
+
 
     // ============
 
