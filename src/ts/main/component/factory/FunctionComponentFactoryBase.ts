@@ -1,5 +1,5 @@
 import ComponentFactoryBase = require("./ComponentFactoryBase");
-import ComponentProcessor = require("../factory/ComponentProcessor");
+import ComponentProcessor = require("../manager/ComponentProcessor");
 import ComponentManager = require("../manager/ComponentManager");
 import Maps = require("../../lang/Maps");
 import Errors = require("../../lang/Errors");

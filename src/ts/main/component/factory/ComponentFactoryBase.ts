@@ -1,5 +1,5 @@
-import ComponentProcessor = require("./ComponentProcessor");
-import ComponentProcessors = require("./ComponentProcessors");
+import ComponentProcessor = require("./../manager/ComponentProcessor");
+import ComponentProcessors = require("./../manager/ComponentProcessors");
 import ComponentManager = require("../manager/ComponentManager");
 import Components = require("../Components");
 import Maps = require("../../lang/Maps");

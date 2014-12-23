@@ -1,7 +1,7 @@
 /// <reference path="../../../jasmine/jasmine.d.ts"/>
 
-import ComponentProcessor = require("../../../main/component/factory/ComponentProcessor");
-import ComponentProcessors = require("../../../main/component/factory/ComponentProcessors");
+import ComponentProcessor = require("../../../main/component/manager/ComponentProcessor");
+import ComponentProcessors = require("../../../main/component/manager/ComponentProcessors");
 import Maps = require("../../../main/lang/Maps");
 
 /**

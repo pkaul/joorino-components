@@ -3,7 +3,7 @@
 import Initializable = require("../../../main/component/Initializable");
 import Destroyable = require("../../../main/component/Destroyable");
 import FunctionComponentFactoryBase = require("../../../main/component/factory/FunctionComponentFactoryBase");
-import ComponentProcessor = require("../../../main/component/factory/ComponentProcessor");
+import ComponentProcessor = require("../../../main/component/manager/ComponentProcessor");
 //import Configurator = require("../../../main/logger/runtime/Configurator");
 
 /**
