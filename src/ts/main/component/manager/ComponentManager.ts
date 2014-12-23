@@ -15,7 +15,7 @@ import Maps = require("../../lang/Maps");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**
- * A container that holds and manages the lifecycle of components. These need to be explicitly {@link #register registered}.
+ * A container that holds and manages the lifecycle of components. Components need to be explicitly {@link #register registered}.
  * After having {@link #register registered} a component, the entire
  * lifecycle is done automatically, e.g. the component is initialized, started, stopped and destroyed in sync of this
  * container's lifecycle. In addition, a {@link Components.EVENT_FINISHED} event from the component itself
@@ -25,12 +25,6 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
 
     private static _idCount:number = 0;
     private static _idPrefix:string = "_cmpnt";
-
-    private _initialized:boolean = false;
-    private _destroyed:boolean = false;
-    private _started:boolean = false;
-
-
 
     /**
      * Name of an event that is raised when a component is {@link #register}ed
@@ -200,7 +194,6 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     public init():Promise<any> {
         return super.init().then(() => {
             this.getLogger().debug("Initializing registered components ...");
-            this._initialized = true;
             return this.doInit(this.clone(this._components)).then(() => {
                 this.getLogger().debug("Initialized registered components");
                 return Promise.resolve();
@@ -211,7 +204,6 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     public destroy():Promise<any> {
         return super.destroy().then(() => {
             this.getLogger().debug("Destroying registered components ...");
-            this._destroyed = true;
             return this.doDestroy(this.clone(this._components)).then(() => {
                 this.getLogger().debug("Destroyed registered components");
                 this._components = null; // remove references
@@ -227,7 +219,6 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
         this._components.forEach((component:any, id:string) => {
             Components.start(component);
         });
-        this._started = true;
     }
 
     public stop():void {
@@ -237,7 +228,6 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
         this._components.forEach((component:any, id:string) => {
             Components.stop(component);
         });
-        this._started = false;
     }
 
     // ================
@@ -279,14 +269,14 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     private replayLifecycle(name:string, component:any):Promise<any> {
 
         this.getLogger().debug("Replaying lifecycle for {0} -> {1}", name, component);
-        if( this._initialized && !this._destroyed ) {
+        if( this.getLifecycleState() >= ComponentBase.STATE_INITIALIZED && this.getLifecycleState() < ComponentBase.STATE_DESTROYED ) {
 
             // the manager is already "initialized". initialize the component as well. and start it afterwards
             var cm:Map<string, any> = Maps.createMap();
             cm.set(name, component);
             return this.doInit(cm).then(() => {
 
-                if( this._started ) {
+                if( this.getLifecycleState() >= ComponentBase.STATE_STARTED ) {
                     // the manager is already "started". start the component as well
                     Components.start(component);
                 }

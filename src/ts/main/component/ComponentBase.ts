@@ -90,9 +90,9 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
 
 
     /**
-     * @return The current state
+     * @return The current lifecycle state
      */
-    public getState():number {
+    public getLifecycleState():number {
         return this._state;
     }
 
