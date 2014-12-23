@@ -116,6 +116,9 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
         if(!ci || !this._components.has(ci)) {
             throw Errors.createIllegalArgumentError("Component "+id+" -> "+component+" is not registered");
         }
+//        if( !!component && component !== this._components.get(ci) ) {
+//            throw Errors.createIllegalArgumentError("Component "+id+"'s value doesn't match "+component+" <-> "+this._components.get(ci));
+//        }
         component = this._components.get(ci);
 
         // unregister all events
@@ -310,9 +313,9 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
 
             // --------------- destroy
             this.getLogger().debug("Destroying components [{0}] {1} ...", names, this.isConcurrentProcessing() ? "concurrently" : "sequentially");
-            var c:Object[] = Maps.values(this._components);
-            c.reverse(); // destroy in reverse order!
-            return Components.destroyAll(c, this.isConcurrentProcessing(), this._lifecycleTimeout).then(() => {
+            var cv:Object[] = Maps.values(components);
+            cv.reverse(); // destroy in reverse order!
+            return Components.destroyAll(cv, this.isConcurrentProcessing(), this._lifecycleTimeout).then(() => {
 
                 // -------------- post-destroy
                 this.getLogger().debug("Post-Destroying components [{0}]", names);

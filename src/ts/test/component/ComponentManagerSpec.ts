@@ -22,8 +22,8 @@ describe("ComponentManager", function():void {
 
         var testling:ComponentManager = new ComponentManager();
 
-        var b1:TestLifecycleBean = new TestLifecycleBean();
-        var b2:TestLifecycleBean = new TestLifecycleBean();
+        var b1:TestLifecycleBean = new TestLifecycleBean("Component1");
+        var b2:TestLifecycleBean = new TestLifecycleBean("Component2");
 
         testling.register(b1,'1');
         testling.register(b2,'2');
