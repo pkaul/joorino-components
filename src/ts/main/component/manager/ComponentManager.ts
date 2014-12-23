@@ -48,13 +48,21 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     // list of all managed components
     private _components:Map<string, Object> = null;
     private _processors:ComponentProcessor[];
+    private _parent:ComponentManager;
 
     private _lifecycleTimeout:number = 5000;    // TODO make configurable
 
-    constructor(name?:string, processors?:ComponentProcessor[]) {
+    /**
+     *
+     * @param name The name of this manager. Might be null.
+     * @param parent This manager's parent. Might be null.
+     * @param processors optional processors. Might be null
+     */
+    constructor(name?:string, parent?:ComponentManager, processors?:ComponentProcessor[]) {
         super(name);
         this._processors = !!processors ? processors : [];
-        this._components = Maps.createMap();
+        this._parent = parent;
+        this._components = Maps.createMap(true);
     }
 
     /**
@@ -144,19 +152,27 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     }
 
     /**
-     * Provides currently registered components
+     * Provides currently registered components of this manager instance (excluding the parent)
      * @return The component
      */
     public getComponents():Map<string, any> {
         return this._components;
     }
 
+    /**
+     * A named component. If this manager doesn't know such a component, the parent is asked.
+     * @return The component or null if not found
+     */
     public getComponent(name:string):any {
-        return this._components.get(name);
+        var result:any = this._components.get(name);
+        if( !result ) {
+            result = this._parent.getComponent(name);
+        }
+        return !result ? null : result;
     }
 
     /**
-     * The number of registered component
+     * The number of registered component of this manager instance (excluding the parent)
      */
     public getCount():number {
         return this._components.size;
@@ -336,7 +352,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     }
 
     private clone(source:Map<string, any>):Map<string, any>  {
-        var result:Map<string, any> = Maps.createMap(false);
+        var result:Map<string, any> = Maps.createMap(true);
         source.forEach((c:any, k:string) => {
             result.set(k, c);
         });
