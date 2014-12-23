@@ -81,8 +81,8 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
     private _events:string[] = [];
 
     constructor() {
-        super();
-        this.setProcessors([new MyComponentProcessor(this._events)]);
+        super(null, null);
+        this.setComponentProcessors([new MyComponentProcessor(this._events)]);
     }
 
     /**

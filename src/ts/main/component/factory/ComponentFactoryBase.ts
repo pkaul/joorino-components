@@ -1,7 +1,6 @@
-import ComponentFactory = require("./ComponentFactory");
 import ComponentProcessor = require("./ComponentProcessor");
 import ComponentProcessors = require("./ComponentProcessors");
-import ComponentBase = require("../ComponentBase");
+import ComponentManager = require("../manager/ComponentManager");
 import Components = require("../Components");
 import Maps = require("../../lang/Maps");
 import Errors = require("../../lang/Errors");
@@ -10,151 +9,39 @@ import Errors = require("../../lang/Errors");
 /**
  * ComponentFactory base implementation that supports {@link ComponentProcessor}s
  */
-class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
-
-    private _initTimeout:number = 10000;    // TODO
-    private _destroyTimeout:number = 5000;  // TODO
-
-    // all processors
-    private _processors:ComponentProcessor[] = [];
-
-    // mapping of built components as "name -> component"
-    private _components:Map<string, Object> = null;
+class ComponentFactoryBase extends ComponentManager {
 
     // -- to be used during initialization only
     // current stack of dependencies (component names)
     private _buildDependencyStack:string[];
-    // map of components that are currently under construction
-    private _buildComponents:Map<string, Object>;
 
-
-    private _parent:ComponentFactory = null;
-
-
-    constructor(parent:ComponentFactory = null) {
-        super();
-        this._parent = parent;
-    }
-
-
-    /**
-     * @param processors Bean processors to be applied to every component
-     */
-    public setProcessors(processors:ComponentProcessor[]):void {
-        this._processors = processors;
-    }
-
-    public getComponentCount():number {
-        if( this._components === null ) {
-            throw Errors.createIllegalStateError("Not initialized or already destroyed");
-        }
-        return this._components.size + (this._parent !== null ? this._parent.getComponentCount() : 0);
-    }
-
-    public getComponent(name:string):any {
-        if( this._components === null ) {
-            throw Errors.createIllegalStateError("Not initialized or already destroyed");
-        }
-        var result:Object = this._components.has(name) ? this._components.get(name) : null;
-        // no such component? look into the parent ...
-        if( result === null && this._parent !== null ) {
-            result = this._parent.getComponent(name);
-        }
-        return result;
+    constructor(name?:string, parent?:ComponentManager, processors?:ComponentProcessor[]) {
+        super(name, parent, processors);
     }
 
 
     public init():Promise<any> {
-
-        if( this._components !== null ) {
-            throw Errors.createIllegalStateError("Already initialized");
-        }
-
-
-//        var _superInitializable:lifecycle.Initializable = super;
-
-        var concurrent:boolean = this.isConcurrentProcessing();
-
-        return this.buildComponents().then((components:Map<string, Object>) => {
-
-            this.getLogger().info("Created {0} components: {1}", components.size, Maps.keys(components));
-
-            // ----------- pre-initialize
-            this.getLogger().info("Pre-Initializing");
-            return ComponentProcessors.processBeforeInit(this._processors, components, this._initTimeout).then(() => {
-
-                // ----------- initialize
-                this.getLogger().debug("Initializing components {0} {1} ...",  Maps.keys(components), concurrent ? "concurrently" : "sequentially");
-                return Components.initAll(Maps.values(components), concurrent, this._initTimeout).then(() => {
-
-                    // ----------- post-initialize
-                    this.getLogger().info("Post-Initializing");
-                    return ComponentProcessors.processAfterInit(this._processors, components, this._initTimeout).then(() => {
-                        this.getLogger().info("Initialized components: {0}", Maps.keys(components));
-                        this._components = components; // store the components
-
-                        return super.init();
-                    });
-                });
+        return this.buildComponents().
+            then(() => {
+                // perform initialization of all created components
+                return super.init();
+            }).
+            catch((error:any) => {
+                this.getLogger().error("Error building components: {0}", error);
             });
-        }).catch((error:any) => {
-            this.getLogger().error("Error building components: {0}", error);
-        });
     }
 
-    public destroy():Promise<any> {
-
-        if( this._components === null ) {
-            throw Errors.createIllegalStateError("Not initialized or already destroyed");
-        }
-
-        var concurrent:boolean = this.isConcurrentProcessing();
-        var superDestroy:Function = super.destroy;
-        // ----------- pre-destroy
-        this.getLogger().debug("Pre-Destroying");
-        return ComponentProcessors.processBeforeDestroy(this._processors, this._components, this._destroyTimeout).then(() => {
-
-            // --------------- destroy
-            this.getLogger().debug("Destroying components {0} {1} ...", Maps.keys(this._components), concurrent ? "concurrently" : "sequentially");
-            var components:Object[] = Maps.values(this._components);
-            components.reverse(); // destroy in reverse order!
-            return Components.destroyAll(components, concurrent, this._destroyTimeout).then(() => {
-
-                // -------------- post-destroy
-                this.getLogger().debug("Post-Destroying");
-                return ComponentProcessors.processAfterDestroy(this._processors, this._components, this._destroyTimeout).then(() => {
-                    this._components = null; // mark as destroyed
-                    this.getLogger().info("Destroyed");
-                    return superDestroy.apply(null);
-                });
-            });
-        }).catch((error:any) => {
-            this.getLogger().error("Error destroying components: {0}", error);
-        });
-    }
 
 
     // ==============
 
-    /**
-     * @return The names of all (locally) created components in the order of creation
-     * @protected
-     */
-    public getComponentNames():string[] {
-        if( this._components === null ) {
-            throw Errors.createIllegalStateError("Not initialized or already destroyed");
-        }
-        return Maps.keys(this._components);
-    }
 
     /**
-     * Triggers building all component instances (without initializing them). TO BE IMPLEMENTED by custom implementation.
+     * Triggers building all component instances (without initializing them) and {@link #register registration}. TO BE IMPLEMENTED by custom implementation.
      * Should delegate to {@link  #doBuildBeans}
-     *
-     * @return The promise containing the builded components
      * @protected
      */
-    public buildComponents():Promise<Map<string, Object>> {
+    /*protected*/ buildComponents():Promise<any> {
         throw Errors.createAbstractFunctionError("buildComponents");
     }
 
@@ -165,7 +52,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * @return The promise containing the created and populated component
      * @protected
      */
-    public doCreateComponent(componentName:string):Promise<Object> {
+    /*protected*/ doCreateComponent(componentName:string):Promise<Object> {
         throw Errors.createAbstractFunctionError("createComponent");
     }
 
@@ -175,26 +62,19 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
     /**
      * Triggers building named components. This will result in invocations of {@link #createComponent}
      * @param componentNames The (unordered) names of the components to be built
-     * @return A promise containing all built components as a map name -> component.
      * @protected
      */
-    public doBuildBeans(componentNames:string[]):Promise<Map<string, Object>> {
+    /*protected*/ doBuildBeans(componentNames:string[]):Promise<any> {
 
         this.getLogger().info("Creating {0} components ...", componentNames.length);
         this.initializeBuild();
 
         // trigger creation of all beans ...
         return this.getOrCreateComponents(componentNames).then(() => {
-
-            // all components have been created now.
-            var result:Map<string,Object> = this._buildComponents;
             // ... clean up ...
             this.cleanupBuild();
-
             this.getLogger().debug("Creating components {0} has been finished", componentNames);
-
-            // ... and return
-            return Promise.resolve(result);
+            return Promise.resolve();
         });
     }
 
@@ -206,7 +86,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * @protected
      * @deprecated Use {@link #require}
      */
-    public resolveDependencies(dependencyNames:string[]):Promise<Map<string, Object>> {
+    /*protected*/ resolveDependencies(dependencyNames:string[]):Promise<Map<string, Object>> {
 
         if( dependencyNames.length === 0 ) {
             // no dependencies. return immediately
@@ -232,7 +112,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * @return The promise containing the resolved dependencies
      * @protected
      */
-    public require(dependencyNames:string[]):Promise<Object[]> {
+    /*protected*/ require(dependencyNames:string[]):Promise<Object[]> {
 
         return this.resolveDependencies(dependencyNames).then((dependencies:Map<string, Object>) => {
 
@@ -245,14 +125,6 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
         });
     }
 
-    /**
-     * Indicates whether or not the components lifecycle may be processed concurrently. If true, then the lifecycle
-     * may be faster but may also have dependency problems.
-     * @protected
-     */
-    public isConcurrentProcessing():boolean {
-        return false;
-    }
 
     // =========================
 
@@ -260,7 +132,6 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Initializes the build process.
      */
     private initializeBuild():void {
-        this._buildComponents = Maps.createMap(true);
         this._buildDependencyStack = [];
     }
 
@@ -268,7 +139,6 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      * Cleans up after the build process.
      */
     private cleanupBuild():void {
-        this._buildComponents = null;
         this._buildDependencyStack = null;
     }
 
@@ -286,12 +156,12 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
             if( componentNames.length == 1 ) {
                 // this was the last one.
-                return Promise.resolve(this._buildComponents);
+                return Promise.resolve(this.getComponents());
             }
             else {
                 // still elements to process. process the remaining
                 return this.getOrCreateComponents(componentNames.slice(1)).then(() => {
-                    return Promise.resolve(this._buildComponents);
+                    return Promise.resolve(this.getComponents());
                 });
             }
         }).catch((error:any) => {
@@ -308,9 +178,9 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
      */
     private getOrCreateComponent(componentName:string):Promise<Object> {
 
-        if(this._buildComponents.has(componentName) ) {
+        if(this.getComponents().has(componentName) ) {
             // already built. pass the existing component to the callback
-            var existing:any = this._buildComponents.get(componentName);
+            var existing:any = this.getComponents().get(componentName);
             this.getLogger().debug("Component {0} is already available: {1}", componentName, existing);
             return Promise.resolve(existing);
         }
@@ -328,7 +198,7 @@ class ComponentFactoryBase extends ComponentBase implements ComponentFactory {
 
                 this.getLogger().info("Component {0} has been created: {1}", componentName, createdComponent);
                 // register component
-                this._buildComponents.set(componentName, createdComponent);
+                this.register(createdComponent, componentName);
                 // remove the current name from the stack
                 this._buildDependencyStack.pop();
                 return Promise.resolve(createdComponent);

@@ -65,6 +65,10 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
         this._components = Maps.createMap(true);
     }
 
+    public setComponentProcessors(componentProcessors:ComponentProcessor[]) {
+        this._processors = componentProcessors;
+    }
+
     /**
      * Registers a new component to this manager. If lifecycle events ({@link Components#EVENT_INITIALIZED}, {@link Components#EVENT_STARTED})
      *  have been applied to this container already then
@@ -156,6 +160,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
      * @return The component
      */
     public getComponents():Map<string, any> {
+        this.assert(!!this._components, "Not initialized or already destroyed");
         return this._components;
     }
 
@@ -164,6 +169,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
      * @return The component or null if not found
      */
     public getComponent(name:string):any {
+        this.assert(!!this._components, "Not initialized or already destroyed");
         var result:any = this._components.get(name);
         if( !result ) {
             result = this._parent.getComponent(name);
@@ -172,9 +178,20 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     }
 
     /**
+     * @return The names of all (locally) created components in the order of creation
+     * @protected
+     */
+    public getComponentNames():string[] {
+        this.assert(!!this._components, "Not initialized or already destroyed");
+        return Maps.keys(this._components);
+    }
+
+
+    /**
      * The number of registered component of this manager instance (excluding the parent)
      */
-    public getCount():number {
+    public getComponentsCount():number {
+        this.assert(!!this._components, "Not initialized or already destroyed");
         return this._components.size;
     }
 
@@ -197,6 +214,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
             this._destroyed = true;
             return this.doDestroy(this.clone(this._components)).then(() => {
                 this.getLogger().debug("Destroyed registered components");
+                this._components = null; // remove references
                 return Promise.resolve();
             })
         });
@@ -229,7 +247,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
      * may be faster but may also have dependency problems.
      * @protected
      */
-    public isConcurrentProcessing():boolean {
+    /*protected*/ isConcurrentProcessing():boolean {
         return false;
     }
 

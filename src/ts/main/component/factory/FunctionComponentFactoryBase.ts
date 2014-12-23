@@ -1,5 +1,6 @@
 import ComponentFactoryBase = require("./ComponentFactoryBase");
-import ComponentFactory = require("./ComponentFactory");
+import ComponentProcessor = require("../factory/ComponentProcessor");
+import ComponentManager = require("../manager/ComponentManager");
 import Maps = require("../../lang/Maps");
 import Errors = require("../../lang/Errors");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
@@ -40,17 +41,15 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
 
     // ==============
 
-    /**
-     * @param parent An optional parent application context
-     */
-        constructor(parent:ComponentFactory = null) {
-        super(parent);
+
+    constructor(name?:string, parent?:ComponentManager, processors?:ComponentProcessor[]) {
+        super(name, parent, processors);
     }
 
     // ===================
 
 
-    public buildComponents():Promise<Map<string, Object>> {
+    public buildComponents():Promise<any> {
 
         this._componentsDefinitions = this.lookupComponentCreators();
         if( this._componentsDefinitions.size === 0 ) {

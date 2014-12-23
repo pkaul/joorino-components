@@ -28,7 +28,7 @@ describe("ComponentManager", function():void {
         testling.register(b1,'1');
         testling.register(b2,'2');
 
-        expect(testling.getCount()).toBe(2);
+        expect(testling.getComponentsCount()).toBe(2);
         expect(testling.getComponents().get('1')).toBe(b1);
         expect(testling.getComponents().get('2')).toBe(b2);
 
@@ -49,7 +49,7 @@ describe("ComponentManager", function():void {
 
             // notify about finished and expect destruction lifecycle
             b1.notifyFinished();
-            expect(testling.getCount()).toBe(1);
+            expect(testling.getComponentsCount()).toBe(1);
             expect(testling.getComponents().get('2')).toBe(b2);
         });
 
@@ -143,9 +143,9 @@ describe("ComponentManager", function():void {
 
         // test registering function directly
         testling.register(f);
-        expect(testling.getCount()).toBe(1);
+        expect(testling.getComponentsCount()).toBe(1);
         testling.unregister(f);
-        expect(testling.getCount()).toBe(0);
+        expect(testling.getComponentsCount()).toBe(0);
 
         // test registering an arrow function
 //        testling.register(() => f());
