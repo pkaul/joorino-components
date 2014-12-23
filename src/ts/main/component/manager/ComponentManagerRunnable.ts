@@ -103,17 +103,15 @@ class ComponentManagerRunnable extends ComponentBase implements Runnable {
 
         this._runnables = [];
         this._functions = [];
-        var beans:any[] = this._componentManager.getComponents();
-        for( var i:number = 0; i<beans.length; i++ ) {
+        this._componentManager.getComponents().forEach((c:any, id:string) => {
 
-            var b:Object = beans[i];
-            if( Components.isRunnable(b)  && !(b instanceof ComponentManagerRunnable) ) {     // don't run this runner!
-                this._runnables.push(<Runnable> b);
+            if( Components.isRunnable(c)  && !(c instanceof ComponentManagerRunnable) ) {     // don't run this runner!
+                this._runnables.push(<Runnable> c);
             }
-            else if( typeof b === 'function' ) {
-                this._functions.push(<Function> b);
+            else if( typeof c === 'function' ) {
+                this._functions.push(<Function> c);
             }
-        }
+        });
     }
 
     /**
