@@ -28,8 +28,6 @@ class SceneBase extends ComponentBase implements Scene {
         super(name);
     }
 
-
-
     public init():Promise<any> {
         return super.init().then(() => {
 
@@ -39,33 +37,51 @@ class SceneBase extends ComponentBase implements Scene {
                 var runner:Runner = this.createRunner(() => this.doRun());
                 if( !!runner ) {
 
-                    // setting up a adapter for invoking #run of all Runnables that are registered in the ComponentManager
-                    this._componentManagerRunner = new ComponentManagerRunner(this._componentManager, true);
-
                     // register the runner so that it will be managed by component manager,
                     //  e.g. it will be started when starting the ComponentManager!
                     this._componentManager.register(runner);
-                }
 
-                return Promise.resolve();
+                    // create an adapter for invoking #run of all Runnables that are registered in the ComponentManager
+                    this._componentManagerRunner = new ComponentManagerRunner(this._componentManager, true);
+                    return this._componentManagerRunner.init().then(() => {
+                        return Promise.resolve();
+                    });
+                }
+                else {
+                    // no runner required
+                    return Promise.resolve();
+                }
             });
         });
     }
 
     public destroy():Promise<any> {
         return super.destroy().then(() => {
-            return this._componentManager.destroy();
+            if( !!this._componentManagerRunner ) {
+                return this._componentManagerRunner.destroy().then(() => {
+                    return this._componentManager.destroy();
+                });
+            }
+            else {
+                return this._componentManager.destroy();
+            }
         });
     }
 
     public start():void {
         super.start();
         this._componentManager.start();
+        if( !!this._componentManagerRunner ) {
+            this._componentManagerRunner.start();
+        }
         this._startTime = Date.now();
     }
 
     public stop():void {
         // order is important!
+        if( !!this._componentManagerRunner ) {
+            this._componentManagerRunner.stop();
+        }
         this._componentManager.stop();
         super.stop();
     }
