@@ -4,7 +4,7 @@ import ComponentBase = require("../component/ComponentBase");
 import Components = require("../component/Components");
 import ComponentManager = require("../component/manager/ComponentManager");
 import Runner = require("./Runner");
-import ComponentManagerRunnable = require("./../component/manager/ComponentManagerRunnable");
+import ComponentManagerRunner = require("./../component/manager/ComponentManagerRunner");
 import Scene = require("./Scene");
 import Runnable = require("./../component/Runnable");
 
@@ -18,7 +18,7 @@ class SceneBase extends ComponentBase implements Scene {
     private _startTime:number;
     private _componentManager:ComponentManager;
     private _finished:boolean = false;
-    private _runnables:Runnable;
+    private _componentManagerRunner:ComponentManagerRunner;
     private _lastRunTime:number = 0;
 
     constructor(name:string = null) {
@@ -42,8 +42,7 @@ class SceneBase extends ComponentBase implements Scene {
                 if( !!runner ) {
 
                     // setting up a adapter for invoking #run of all Runnables that are registered in the ComponentManager
-                    this._runnables = new ComponentManagerRunnable(this._componentManager);
-                    this._componentManager.register(this._runnables);
+                    this._componentManagerRunner = new ComponentManagerRunner(this._componentManager, true);
 
                     // register the runner so that it will be managed by component manager,
                     //  e.g. it will be started when starting the ComponentManager!
@@ -80,7 +79,7 @@ class SceneBase extends ComponentBase implements Scene {
      * @protected
      */
     public handleRun(lastTime:number):void {
-        this._runnables.run();
+        this._componentManagerRunner.runComponents();
     }
 
 
