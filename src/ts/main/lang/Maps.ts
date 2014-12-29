@@ -90,9 +90,9 @@ class StringMap<T> implements Map<string, T> {
         }
         else {
 
-            for( var key in this._elements ) {
-                if( this._elements.hasOwnProperty(key) ) {
-                    callbackfn.apply(thisArg, [this._elements[key], key, this]);
+            for( var k in this._elements ) {
+                if( this._elements.hasOwnProperty(k) ) {
+                    callbackfn.apply(thisArg, [this._elements[k], k, this]);
                 }
             }
         }

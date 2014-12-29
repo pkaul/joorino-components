@@ -25,8 +25,7 @@ class ComponentFactoryBase extends ComponentManager {
             then(() => {
                 // perform initialization of all created components
                 return super.init();
-            }).
-            catch((error:any) => {
+            }).catch((error:any) => {
                 this.getLogger().error("Error building components: {0}", error);
             });
     }
