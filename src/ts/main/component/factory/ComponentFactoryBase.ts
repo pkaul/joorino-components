@@ -31,10 +31,7 @@ class ComponentFactoryBase extends ComponentManager {
             });
     }
 
-
-
     // ==============
-
 
     /**
      * Triggers building all component instances (without initializing them) and {@link #register registration}. TO BE IMPLEMENTED by custom implementation.
@@ -44,7 +41,6 @@ class ComponentFactoryBase extends ComponentManager {
     /*protected*/ buildAllComponents():Promise<any> {
         throw Errors.createAbstractFunctionError("buildAllComponents");
     }
-
 
     /**
      * Creates a component and populates its properties. TO BE IMPLEMENTED by custom implementation.
@@ -81,7 +77,6 @@ class ComponentFactoryBase extends ComponentManager {
             return Promise.resolve();
         });
     }
-
 
     /**
      * Provides dependencies that are required by the current component
@@ -129,7 +124,6 @@ class ComponentFactoryBase extends ComponentManager {
         });
     }
 
-
     // =========================
 
     /**
@@ -162,12 +156,17 @@ class ComponentFactoryBase extends ComponentManager {
 
             if( componentNames.length == 1 ) {
                 // this was the last one.
-                return Promise.resolve(this.getComponents());
+                var result:Map<string, any> = Maps.createMap(true);
+                result.set(next, component);
+                return Promise.resolve(result);
             }
             else {
                 // still elements to process. process the remaining
-                return this.getOrCreateComponents(componentNames.slice(1)).then(() => {
-                    return Promise.resolve(this.getComponents());
+                return this.getOrCreateComponents(componentNames.slice(1)).then((components:Map<string,any>) => {
+
+                    // add the current component to the map of previously fetched
+                    components.set(next, component);
+                    return Promise.resolve(components);
                 });
             }
         }).catch((error:any) => {
