@@ -1,5 +1,6 @@
 import ComponentFactoryBase = require("./ComponentFactoryBase");
-import ComponentFactory = require("./ComponentFactory");
+import ComponentProcessor = require("../manager/ComponentProcessor");
+import ComponentManager = require("../manager/ComponentManager");
 import Maps = require("../../lang/Maps");
 import Errors = require("../../lang/Errors");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
@@ -10,17 +11,17 @@ import Errors = require("../../lang/Errors");
  * Example: An application context consisting of two components "myComponent1" and "myComponent2" where "myComponent2" depends on "myComponent1"
  * may be defined like:
  * <code>
- * public function createMyComponent1(created:Function):void {
+ * public createMyComponent1():Promise<any> {
  *  var component1:Object = ...
- *  created(component1);
+ *  return Promise.resolve(component1);
  * }
  *
- * public function createMyComponent2(created:Function):void {
- *  resolveDependencies(new <String>["myComponent1"], function(dependencies:Object):void {
- *   var component1Dependency = dependencies['myComponent1'];
+ * public createMyComponent2():Promise<any> {
+ *  this.require(["myComponent1"], (dependencies:Object[]) => {
+ *   var component1Dependency = dependencies[0];
  *   var component2:Object = ...
  *   component2.myComponent1 = component1Dependency;
- *   created(component2);
+ *   return Promise.resolve(component2);
  *  }
  * }
  * </code>
@@ -40,28 +41,26 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
 
     // ==============
 
-    /**
-     * @param parent An optional parent application context
-     */
-        constructor(parent:ComponentFactory = null) {
-        super(parent);
+
+    constructor(name?:string, parent?:ComponentManager, processors?:ComponentProcessor[]) {
+        super(name, parent, processors);
     }
 
     // ===================
 
 
-    public buildComponents():Promise<Map<string, Object>> {
+    /*protected*/ buildAllComponents():Promise<any> {
 
         this._componentsDefinitions = this.lookupComponentCreators();
         if( this._componentsDefinitions.size === 0 ) {
             throw Errors.createIllegalArgumentError("No component definitions available: "+this._componentsDefinitions);
         }
 
-        return this.doBuildBeans(Maps.keys(this._componentsDefinitions));
+        return this.buildComponents(Maps.keys(this._componentsDefinitions));
     }
 
 
-    public doCreateComponent(name:string):Promise<Object> {
+    /*protected*/ buildComponent(name:string):Promise<Object> {
 
         // lookup 'create' function from definitions
         var createFunction:Function = this._componentsDefinitions.get(name);
@@ -86,7 +85,13 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
         });
     }
 
-    // =========
+
+
+    /*protected*/ hasComponentDefinition(componentName:string):boolean {
+        return this._componentsDefinitions.has(componentName);
+    }
+
+// =========
 
 
     /**

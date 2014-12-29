@@ -9,23 +9,26 @@ import Components = require("../Components");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**
- * A {@link Runnable} bean that delegates to all {@link Runnable}s and {@link Function}s that are registered to
- * an underlying {@link ComponentManager}.
+ * A component that delegates a {@link #runComponents} invocation to all {@link Runnable} implementations and
+ * {@link Function}s that are registered to an underlying {@link ComponentManager}.
  * Note: When registering a function, keep in mind that that the function's binding might be important!
  */
-class ComponentManagerRunnable extends ComponentBase implements Runnable {
+class ComponentManagerRunner extends ComponentBase {
 
     private _componentManager:ComponentManager;
     private _runnables:Runnable[] = null;
     private _functions:Function[] = null;
     private _stopped:boolean = true;
+    private _runFunctions:boolean;
 
     /**
      * @param componentManager The manager where the {@link Runnable}s shall be taken from
+     * @param runFunctions whether or not function shall be executed, too. Default: true.
      */
-    constructor(componentManager:ComponentManager) {
+    constructor(componentManager:ComponentManager, runFunctions:boolean = true) {
         super();
         this._componentManager = componentManager;
+        this._runFunctions = runFunctions;
     }
 
     public init():Promise<any> {
@@ -56,7 +59,10 @@ class ComponentManagerRunnable extends ComponentBase implements Runnable {
         this._stopped = true;
     }
 
-    public run():void {
+    /**
+     * Runs all components of the component manager.
+     */
+    public runComponents():void {
 
         // run all runnables
         var runnables:Runnable[] = this.getRunnables();
@@ -103,17 +109,15 @@ class ComponentManagerRunnable extends ComponentBase implements Runnable {
 
         this._runnables = [];
         this._functions = [];
-        var beans:any[] = this._componentManager.getComponents();
-        for( var i:number = 0; i<beans.length; i++ ) {
+        this._componentManager.getComponents().forEach((c:any, id:string) => {
 
-            var b:Object = beans[i];
-            if( Components.isRunnable(b)  && !(b instanceof ComponentManagerRunnable) ) {     // don't run this runner!
-                this._runnables.push(<Runnable> b);
+            if( Components.isRunnable(c) ) {
+                this._runnables.push(<Runnable> c);
             }
-            else if( typeof b === 'function' ) {
-                this._functions.push(<Function> b);
+            else if( typeof c === 'function' && this._runFunctions ) {
+                this._functions.push(<Function> c);
             }
-        }
+        });
     }
 
     /**
@@ -124,4 +128,4 @@ class ComponentManagerRunnable extends ComponentBase implements Runnable {
         this._functions = null;
     }
 }
-export = ComponentManagerRunnable;
+export = ComponentManagerRunner;

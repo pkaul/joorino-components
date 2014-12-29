@@ -47,7 +47,7 @@ describe("LifecycleBean", function():void {
         testling.subscribeEvent(Components.EVENT_STARTED, startCallback);
         testling.subscribeEvent(Components.EVENT_STOPPED, stopCallback);
 
-        expect(testling.getState()).toBe(ComponentBase.STATE_CREATED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_CREATED);
         expect(initializeCount).toBe(0);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(0);
@@ -55,7 +55,7 @@ describe("LifecycleBean", function():void {
 
         // --- initialize
         testling.init();
-        expect(testling.getState()).toBe(ComponentBase.STATE_INITIALIZED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_INITIALIZED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(0);
@@ -63,7 +63,7 @@ describe("LifecycleBean", function():void {
 
         // --- initialize again
         expect(() => {testling.init()}).toThrow();   // expect init() to throw an error
-        expect(testling.getState()).toBe(ComponentBase.STATE_INITIALIZED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_INITIALIZED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(0);
@@ -71,7 +71,7 @@ describe("LifecycleBean", function():void {
 
         // --- start
         testling.start();
-        expect(testling.getState()).toBe(ComponentBase.STATE_STARTED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_STARTED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(1);
@@ -80,7 +80,7 @@ describe("LifecycleBean", function():void {
         // --- start again
         testling.start();
         // expect no change
-        expect(testling.getState()).toBe(ComponentBase.STATE_STARTED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_STARTED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(1);
@@ -88,7 +88,7 @@ describe("LifecycleBean", function():void {
 
         // --- stop
         testling.stop();
-        expect(testling.getState()).toBe(ComponentBase.STATE_STOPPED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_STOPPED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(1);
@@ -97,7 +97,7 @@ describe("LifecycleBean", function():void {
         // --- stop again
         testling.stop();
         // expect no change
-        expect(testling.getState()).toBe(ComponentBase.STATE_STOPPED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_STOPPED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(0);
         expect(startCount).toBe(1);
@@ -105,7 +105,7 @@ describe("LifecycleBean", function():void {
 
         // --- destroy
         testling.destroy();
-        expect(testling.getState()).toBe(ComponentBase.STATE_DESTROYED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_DESTROYED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(1);
         expect(startCount).toBe(1);
@@ -114,7 +114,7 @@ describe("LifecycleBean", function():void {
         // --- destroy again
 //        expect(testling.destroy).toThrow();   // expect destroy() to throw an error
         testling.destroy();  // TODO not sure: shall be throw an exception here?
-        expect(testling.getState()).toBe(ComponentBase.STATE_DESTROYED);
+        expect(testling.getLifecycleState()).toBe(ComponentBase.STATE_DESTROYED);
         expect(initializeCount).toBe(1);
         expect(destroyCount).toBe(1);
         expect(startCount).toBe(1);

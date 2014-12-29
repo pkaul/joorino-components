@@ -4,21 +4,27 @@ import Stoppable = require("./../Stoppable");
 import Startable = require("./../Startable");
 import Components = require("./../Components");
 import ComponentBase = require("./../ComponentBase");
+import ComponentProcessor = require("./ComponentProcessor");
+import ComponentProcessors = require("./ComponentProcessors");
 import Events = require("../../event/Events");
 import EventSubscriber = require("../../event/EventSubscriber");
 import Logger = require("./../../logger/Logger");
 import LoggerFactory = require("./../../logger/LoggerFactory");
 import Errors = require("../../lang/Errors");
+import Maps = require("../../lang/Maps");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**
- * A container that holds and manages the lifecycle of components. These need to be explicitly {@link #register registered}.
+ * A container that holds and manages the lifecycle of components. Components need to be explicitly {@link #register registered}.
  * After having {@link #register registered} a component, the entire
  * lifecycle is done automatically, e.g. the component is initialized, started, stopped and destroyed in sync of this
  * container's lifecycle. In addition, a {@link Components.EVENT_FINISHED} event from the component itself
  * is taken into account.
  */
 class ComponentManager extends ComponentBase /*implements Initializable, Startable, Stoppable, Destroyable*/ {
+
+    private static _idCount:number = 0;
+    private static _idPrefix:string = "_cmpnt";
 
     /**
      * Name of an event that is raised when a component is {@link #register}ed
@@ -33,120 +39,205 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     public static EVENT_UNREGISTERED:string = "unregistered";
 
 
-    private _components:any[] = [];
-    private _lifecycleTimeout:number = 5000;    // TODO
+    // list of all managed components
+    private _components:Map<string, Object> = null;
+    private _processors:ComponentProcessor[];
+    private _parent:ComponentManager;
 
-    constructor(name?:string) {
+    private _lifecycleTimeout:number = 5000;    // TODO make configurable
+
+    /**
+     *
+     * @param name The name of this manager. Might be null.
+     * @param parent This manager's parent. Might be null.
+     * @param processors optional processors. Might be null
+     */
+    constructor(name?:string, parent?:ComponentManager, processors?:ComponentProcessor[]) {
         super(name);
+        this._processors = !!processors ? processors : [];
+        this._parent = parent;
+        this._components = Maps.createMap(true);
+    }
+
+    public setComponentProcessors(componentProcessors:ComponentProcessor[]) {
+        this._processors = componentProcessors;
     }
 
     /**
-     * Adds a new bean to this container. If lifecycle events ({@link Components#EVENT_INITIALIZED}, {@link Components#EVENT_STARTED})
+     * Registers a new component to this manager. If lifecycle events ({@link Components#EVENT_INITIALIZED}, {@link Components#EVENT_STARTED})
      *  have been applied to this container already then
      *  the bean's state will be adjusted by "replaying" the lifecycle. A bean that fires {@link Components#EVENT_FINISHED}
      *  will be stopped, destroyed and unregistered.
      *
-     * @param component The bean
-     * @return This container
+     * @param component The component
+     * @param id the component id. If null or undefined, an id is generated
      */
-    public register(component:Object):void {
+    public register(component:Object, id?:string):Promise<any> {
+
+        // generate an id if none available
+        id = !!id ? id : ComponentManager.generateId();
 
         // store the component internally
-        this._components.push(component);
+        if( this._components.has(id) ) {
+            throw Errors.createIllegalStateError("There is already a component "+id+": "+this._components.get(id));
+        }
+        this._components.set(id, component);
+        this.getLogger().debug("Registered component {0} -> {1}", id, component);
 
         // bring the component's state up-to-date
-        this.adjustState(component);
+        return this.replayLifecycle(id, component).then(() => {
 
-        // detect certain events of component so that component can be unregistered automatically
-        if( Events.isEventSubscriber(component)) {
-            (<EventSubscriber> component).subscribeEvent(Components.EVENT_FINISHED, this.componentFinished, this);
-        }
+            // detect certain events of component so that component can be unregistered automatically
+            if( Events.isEventSubscriber(component)) {
+                (<EventSubscriber> component).subscribeEvent(Components.EVENT_FINISHED, this.componentFinished, this);
+            }
 
-        // notify listeners that a component has been registered
-        this.getEventPublisher().publishEvent(ComponentManager.EVENT_REGISTERED, component, ComponentManager.EVENT_REGISTERED);
+            // notify listeners that a component has been registered
+            this.getEventPublisher().publishEvent(ComponentManager.EVENT_REGISTERED, component, ComponentManager.EVENT_REGISTERED);
+            return Promise.resolve();
+        });
     }
-
 
     /**
      * Unregister a component. Does nothing when no such component has been registered before
      */
-    public unregister(component:Object):void {
+    public unregister(component:Object, id?:string):Promise<any> {
 
         // lookup component
-        var componentIndex:number = this._components.indexOf(component);
-        if( componentIndex > -1 ) {
+        var ci:string = id;
+        if( !ci && !!component ) {
 
-            // remove component from array. TODO reuse array for GC reasons
-            var newComponents:any[] = this._components.slice(0, componentIndex);
-            newComponents = newComponents.concat(this._components.slice(componentIndex+1));
-            this._components = newComponents;
+            // id is unknown. try to find the id via component
+            this._components.forEach((c:any, i:string) => {
 
-            // unregister all events
-            if( Events.isEventSubscriber(component)) {
-                (<EventSubscriber> component).unsubscribeEvent(Components.EVENT_FINISHED, this.componentFinished);
-            }
+                if( c === component ) {
+
+                    // found the component
+                    ci = i;
+                    // TODO stop this loop?
+                }
+            });
+        }
+
+        if(!ci || !this._components.has(ci)) {
+            throw Errors.createIllegalArgumentError("Component "+id+" -> "+component+" is not registered");
+        }
+//        if( !!component && component !== this._components.get(ci) ) {
+//            throw Errors.createIllegalArgumentError("Component "+id+"'s value doesn't match "+component+" <-> "+this._components.get(ci));
+//        }
+        component = this._components.get(ci);
+
+        // unregister all events
+        if( Events.isEventSubscriber(component)) {
+            (<EventSubscriber> component).unsubscribeEvent(Components.EVENT_FINISHED, this.componentFinished);
+        }
+
+        this.getLogger().debug("Unregistered component {0} -> {1}", ci, component);
+
+        // remove from registry
+        this._components.delete(ci);
+
+        // run destruction lifecycle
+        var cm:Map<string, any> = Maps.createMap();
+        cm.set(ci, component);
+        return this.doDestroy(cm).then(() => {
 
             // notify listeners that a component has been unregistered
             this.getEventPublisher().publishEvent(ComponentManager.EVENT_UNREGISTERED, component, ComponentManager.EVENT_UNREGISTERED);
-        }
-        else {
-            // no such component
-            //this.getLogger().warn("Bean {0} couldn't be unregistered since it is not (or no longer) registered", bean);
-            throw Errors.createIllegalArgumentError("Component "+component+" is not registered");
-        }
+
+            return Promise.resolve();
+        });
     }
 
-
-
     /**
-     * Provides currently registered components
+     * Provides currently registered components of this manager instance (excluding the parent)
      * @return The component
      */
-    public getComponents():any[] {
+    public getComponents():Map<string, any> {
+        this.assert(!!this._components, "Not initialized or already destroyed");
         return this._components;
     }
 
     /**
-     * The number of registered component
+     * A named component. If this manager doesn't know such a component, the parent is asked.
+     * @param name The component name
+     * @param lookupParent Whether or not the parent shall be taken into account for component lookup
+     * @return The component or null if not found
      */
-    public getCount():number {
-        return this._components.length;
+    public getComponent(name:string, lookupParent:boolean = false):any {
+        this.assert(!!this._components, "Not initialized or already destroyed");
+        var result:any = this._components.get(name);
+        if( !result && lookupParent ) {
+            result = this._parent.getComponent(name);
+        }
+        return !result ? null : result;
+    }
+
+    /**
+     * @return The names of all (locally) created components in the order of creation
+     * @protected
+     */
+    public getComponentNames():string[] {
+        this.assert(!!this._components, "Not initialized or already destroyed");
+        return Maps.keys(this._components);
+    }
+
+
+    /**
+     * The number of registered component of this manager instance (excluding the parent)
+     */
+    public getComponentsCount():number {
+        this.assert(!!this._components, "Not initialized or already destroyed");
+        return this._components.size;
+    }
+
+    /**
+     * @return The parent component manager if available
+     */
+    public getParent():ComponentManager {
+        return this._parent;
     }
 
     // -----------------
 
-
     public init():Promise<any> {
-        return super.init().then(
-            () => { return Components.initAll(this._components, this.isConcurrentProcessing(), this._lifecycleTimeout); }
-        );
+        return super.init().then(() => {
+            this.getLogger().debug("Initializing registered components ...");
+            return this.doInit(this.clone(this._components)).then(() => {
+                this.getLogger().debug("Initialized registered components");
+                return Promise.resolve();
+            });
+        });
     }
 
-
     public destroy():Promise<any> {
-        return super.destroy().then(
-            () => { return Components.destroyAll(this._components, this.isConcurrentProcessing(), this._lifecycleTimeout); }
-        );
+        return super.destroy().then(() => {
+            this.getLogger().debug("Destroying registered components ...");
+            return this.doDestroy(this.clone(this._components)).then(() => {
+                this.getLogger().debug("Destroyed registered components");
+                this._components = null; // remove references
+                return Promise.resolve();
+            })
+        });
     }
 
     public start():void {
         super.start();
+
         // start all component
-        for( var i:number = 0; i<this._components.length; i++ ) {
-            var b:any = this._components[i];
-            Components.start(b);
-        }
+        this._components.forEach((component:any, id:string) => {
+            Components.start(component);
+        });
     }
 
     public stop():void {
         super.stop();
         // stop all component
-        for( var i:number = 0; i<this._components.length; i++ ) {
-            var b:any = this._components[i];
-            Components.stop(b);
-        }
+        // start all component
+        this._components.forEach((component:any, id:string) => {
+            Components.stop(component);
+        });
     }
-
 
     // ================
 
@@ -155,7 +246,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
      * may be faster but may also have dependency problems.
      * @protected
      */
-    public isConcurrentProcessing():boolean {
+    /*protected*/ isConcurrentProcessing():boolean {
         return false;
     }
 
@@ -163,48 +254,128 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     // ============
 
     /**
-     * Notification when a bean has been destroyed
+     * Notification when a component is finished and can be destroyed
      */
     private componentFinished(component:any):void {
-
-        // unregister component
-        this.unregister(component);
 
         // stop component
         if( Components.isStoppable(component) ) {
             (<Stoppable> component).stop();
         }
 
-        // destroy component
-        if( Components.isDestroyable(component) ) {
-            (<Destroyable> component).destroy();
-        }
+        //hier ist ein fehler
+
+        // destroy & unregister component
+        this.unregister(component)/*.catch((e) => {
+            this.getLogger().warn("Error unregistering component {0}", component, e);
+        })*/;
     }
 
 
     /**
-     * Brings a component into a certain state
+     * Brings a component into the current lifecycle state
      */
-    private adjustState(component:any):void {
+    private replayLifecycle(name:string, component:any):Promise<any> {
 
-        var start:Function = () => {
-            if( this.getState() === ComponentManager.STATE_STARTED ) {
-                // the manager is already "started". start the component as well
-                Components.start(component);
-            }
-        };
+        this.getLogger().debug("Replaying lifecycle for {0} -> {1}", name, component);
+        if( this.getLifecycleState() >= ComponentBase.STATE_INITIALIZED && this.getLifecycleState() < ComponentBase.STATE_DESTROYED ) {
 
-        if( this.getState() >= ComponentManager.STATE_INITIALIZED && this.getState() <= ComponentManager.STATE_DESTROYED ) {
             // the manager is already "initialized". initialize the component as well. and start it afterwards
-            Components.init(component, this._lifecycleTimeout).then(() => {
-                start();
+            var cm:Map<string, any> = Maps.createMap();
+            cm.set(name, component);
+            return this.doInit(cm).then(() => {
+
+                if( this.getLifecycleState() >= ComponentBase.STATE_STARTED ) {
+                    // the manager is already "started". start the component as well
+                    Components.start(component);
+                }
+                return Promise.resolve();
             });
         }
         else {
-            start();
+            return Promise.resolve();
+        }
+    }
+
+    /**
+     * Performs initialization of one or more components
+     */
+    private doInit(components:Map<string,any>):Promise<any> {
+
+        if( components.size == 0 ) {
+            return Promise.resolve();
         }
 
+        var names:string[] = Maps.keys(components);
+
+        // ----------- pre-initialize
+        this.getLogger().debug("Pre-Initializing components [{0}] ...", names);
+        return ComponentProcessors.processBeforeInit(this._processors, components, this._lifecycleTimeout).then(() => {
+
+            // ----------- initialize
+            this.getLogger().debug("Initializing components [{0}] {1} ...",  names, this.isConcurrentProcessing() ? "concurrently" : "sequentially");
+            return Components.initAll(Maps.values(components), this.isConcurrentProcessing(), this._lifecycleTimeout).then(() => {
+
+                // ----------- post-initialize
+                this.getLogger().debug("Post-Initializing components [{0}]", names);
+                return ComponentProcessors.processAfterInit(this._processors, components, this._lifecycleTimeout).then(() => {
+                    this.getLogger().info("Initialized components: [{0}]", names);
+                    return Promise.resolve();
+                });
+            });
+        }).catch((e) => {
+            this.getLogger().warn("Error initializing components [{0}]: {1}", names, e);
+            return Promise.reject(e);
+        });
     }
+
+    /**
+     * Performs destruction of one or more components
+     */
+    private doDestroy(components:Map<string,any>):Promise<any> {
+
+        if( components.size == 0 ) {
+            return Promise.resolve();
+        }
+
+        var names:string[] = Maps.keys(components);
+
+        // ----------- pre-destroy
+        this.getLogger().debug("Pre-Destroying components [{0}]", names);
+        return ComponentProcessors.processBeforeDestroy(this._processors, components, this._lifecycleTimeout).then(() => {
+
+            // --------------- destroy
+            this.getLogger().debug("Destroying components [{0}] {1} ...", names, this.isConcurrentProcessing() ? "concurrently" : "sequentially");
+            var cv:Object[] = Maps.values(components);
+            cv.reverse(); // destroy in reverse order!
+            return Components.destroyAll(cv, this.isConcurrentProcessing(), this._lifecycleTimeout).then(() => {
+
+                // -------------- post-destroy
+                this.getLogger().debug("Post-Destroying components [{0}]", names);
+                return ComponentProcessors.processAfterDestroy(this._processors, this._components, this._lifecycleTimeout).then(() => {
+                    this.getLogger().info("Destroyed components [{0}]", names);
+                    return Promise.resolve();
+                });
+            });
+        }).catch((e) => {
+            this.getLogger().warn("Error destroying [{0}]: {1}", components, e);
+            return Promise.reject(e);
+        });
+    }
+
+
+    private static generateId():string {
+        return ComponentManager._idPrefix+(ComponentManager._idCount++);
+    }
+
+    private clone(source:Map<string, any>):Map<string, any>  {
+        var result:Map<string, any> = Maps.createMap(true);
+        source.forEach((c:any, k:string) => {
+            result.set(k, c);
+        });
+        return result;
+    }
+
 }
 
 export = ComponentManager;

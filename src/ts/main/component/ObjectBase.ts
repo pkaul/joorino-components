@@ -47,7 +47,7 @@ class ObjectBase implements EventSubscriber, Identifiable {
      * @return A string that reflects this object's class
      */
     public toString():string {
-        return this.getName()+"[]";
+        return this.getName()+"{}";
     }
 
 

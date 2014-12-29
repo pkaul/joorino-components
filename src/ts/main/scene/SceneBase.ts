@@ -4,7 +4,7 @@ import ComponentBase = require("../component/ComponentBase");
 import Components = require("../component/Components");
 import ComponentManager = require("../component/manager/ComponentManager");
 import Runner = require("./Runner");
-import ComponentManagerRunnable = require("./../component/manager/ComponentManagerRunnable");
+import ComponentManagerRunner = require("./../component/manager/ComponentManagerRunner");
 import Scene = require("./Scene");
 import Runnable = require("./../component/Runnable");
 
@@ -18,51 +18,70 @@ class SceneBase extends ComponentBase implements Scene {
     private _startTime:number;
     private _componentManager:ComponentManager;
     private _finished:boolean = false;
-    private _runnables:Runnable;
+    private _componentManagerRunner:ComponentManagerRunner;
     private _lastRunTime:number = 0;
 
+    /**
+     * @param name The (optional) scene name
+     */
     constructor(name:string = null) {
         super(name);
     }
 
-    public start():void {
-        super.start();
-        this._componentManager.start();
-        this._startTime = Date.now();
-    }
-
-
     public init():Promise<any> {
         return super.init().then(() => {
 
-            this._componentManager = new ComponentManager(this.getName()+"-components");
+            this._componentManager = this.createComponentManager();
             return this._componentManager.init().then(() => {
 
                 var runner:Runner = this.createRunner(() => this.doRun());
                 if( !!runner ) {
 
-                    // setting up a adapter for invoking #run of all Runnables that are registered in the ComponentManager
-                    this._runnables = new ComponentManagerRunnable(this._componentManager);
-                    this._componentManager.register(this._runnables);
-
                     // register the runner so that it will be managed by component manager,
                     //  e.g. it will be started when starting the ComponentManager!
                     this._componentManager.register(runner);
-                }
 
-                return Promise.resolve();
+                    // create an adapter for invoking #run of all Runnables that are registered in the ComponentManager
+                    this._componentManagerRunner = new ComponentManagerRunner(this._componentManager, true);
+                    return this._componentManagerRunner.init().then(() => {
+                        return Promise.resolve();
+                    });
+                }
+                else {
+                    // no runner required
+                    return Promise.resolve();
+                }
             });
         });
     }
 
     public destroy():Promise<any> {
         return super.destroy().then(() => {
-            return this._componentManager.destroy();
+            if( !!this._componentManagerRunner ) {
+                return this._componentManagerRunner.destroy().then(() => {
+                    return this._componentManager.destroy();
+                });
+            }
+            else {
+                return this._componentManager.destroy();
+            }
         });
+    }
+
+    public start():void {
+        super.start();
+        this._componentManager.start();
+        if( !!this._componentManagerRunner ) {
+            this._componentManagerRunner.start();
+        }
+        this._startTime = Date.now();
     }
 
     public stop():void {
         // order is important!
+        if( !!this._componentManagerRunner ) {
+            this._componentManagerRunner.stop();
+        }
         this._componentManager.stop();
         super.stop();
     }
@@ -79,8 +98,8 @@ class SceneBase extends ComponentBase implements Scene {
      *  @param lastTime The time when this method has been executed last. 0 = executed the first time.
      * @protected
      */
-    public handleRun(lastTime:number):void {
-        this._runnables.run();
+    /*protected*/ handleRun(lastTime:number):void {
+        this._componentManagerRunner.runComponents();
     }
 
 
@@ -90,7 +109,7 @@ class SceneBase extends ComponentBase implements Scene {
      * {@link Function} will be invoked continuously.
      * @protected
      */
-    public getComponentManager():ComponentManager {
+    /*protected*/ getComponentManager():ComponentManager {
         return this._componentManager
     }
 
@@ -100,7 +119,7 @@ class SceneBase extends ComponentBase implements Scene {
      * @return Gets the time when this scene has been started
      * @protected
      */
-    public getStartTime():number {
+    /*protected*/ getStartTime():number {
         return this._startTime;
     }
 
@@ -108,7 +127,7 @@ class SceneBase extends ComponentBase implements Scene {
      * @return The duration in milliseconds since this scene has been started
      * @protected
      */
-    public getDuration():number {
+    /*protected*/ getDuration():number {
         return Date.now()-this.getStartTime();
     }
 
@@ -117,7 +136,7 @@ class SceneBase extends ComponentBase implements Scene {
      * @see #finished
      * @protected
      */
-    public finish():void {
+    /*protected*/ finish():void {
         this.getLogger().info("Finishing ...");
         this.finished();
     }
@@ -127,7 +146,7 @@ class SceneBase extends ComponentBase implements Scene {
      * @see #finish
      * @protected
      */
-    public finished():void {
+    /*protected*/ finished():void {
         if( !this._finished ) {
             this._finished = true;
             this.getLogger().info("Finished ...");
@@ -138,7 +157,7 @@ class SceneBase extends ComponentBase implements Scene {
     /**
      * @protected
      */
-    public isFinished():boolean {
+    /*protected*/ isFinished():boolean {
         return this._finished;
     }
 
@@ -149,8 +168,15 @@ class SceneBase extends ComponentBase implements Scene {
      * @return The runner or null if this scene shouldn't use a runner.
      * @protected
      */
-    public createRunner(executable:() => void):Runner {
+    /*protected*/ createRunner(executable:() => void):Runner {
         return new Runner(executable, 60, this.getName()+"-runner");
+    }
+
+    /**
+     * Creates a new instance of a component manager for this scene. Override this function for a scene specific instance.
+     */
+    /*protected*/ createComponentManager():ComponentManager {
+        return new ComponentManager(this.getName()+"-components");
     }
 
     // =======

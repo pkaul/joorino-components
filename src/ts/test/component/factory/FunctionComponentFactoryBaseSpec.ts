@@ -3,7 +3,8 @@
 import Initializable = require("../../../main/component/Initializable");
 import Destroyable = require("../../../main/component/Destroyable");
 import FunctionComponentFactoryBase = require("../../../main/component/factory/FunctionComponentFactoryBase");
-import ComponentProcessor = require("../../../main/component/factory/ComponentProcessor");
+import ComponentProcessor = require("../../../main/component/manager/ComponentProcessor");
+import ComponentManager = require("../../../main/component/manager/ComponentManager");
 //import Configurator = require("../../../main/logger/runtime/Configurator");
 
 /**
@@ -20,6 +21,7 @@ describe("FunctionComponentFactoryBase", function():void {
 
         var initialized:boolean = false;
         var destroyed:boolean = false;
+
         var testling:TestFunctionComponentFactory = new TestFunctionComponentFactory();
 
         testling.init().then(() => {
@@ -67,7 +69,55 @@ describe("FunctionComponentFactoryBase", function():void {
             // check the destruction order. make sure that the destruction takes place in reverse order than init
             expect(testling.getEvents().join(",")).toBe("beforeinit(bean3),beforeinit(bean2),beforeinit(bean1),init(my-bean-3),init(my-bean-2),init(my-bean-1),afterinit(bean3),afterinit(bean2),afterinit(bean1),beforedestroy(bean1),beforedestroy(bean2),beforedestroy(bean3),destroy(my-bean-1),destroy(my-bean-2),destroy(my-bean-3),afterdestroy(bean1),afterdestroy(bean2),afterdestroy(bean3)");
         });
-    })
+    });
+
+    /**
+     * Tests use of parent by testling
+     */
+    it("testParent", () => {
+
+        // create a parent containing bean0 and bean2
+        var parent:ComponentManager = new ComponentManager();
+        var parentComponent1:MyComponent = new MyComponent([]);
+        parentComponent1.setName("parent-bean-0");
+        parent.register(parentComponent1, "bean0");
+
+        var parentComponent2:MyComponent = new MyComponent([]);
+        parentComponent2.setName("parent-bean-2");
+        parent.register(parentComponent2, "bean2");
+
+        // create the testling
+        var testling:ParentTestFunctionComponentFactory = new ParentTestFunctionComponentFactory(parent);
+
+        // do a proper initialization
+        var initialized:boolean = false;
+        parent.init().then(() => {
+            return testling.init().then(() => {
+                initialized = true;
+                return Promise.resolve();
+            });
+        });
+
+
+        waitsFor(() => {
+            return initialized;
+        });
+        runs(() => {
+
+            expect(initialized).toBe(true);
+
+            expect(testling.getComponentsCount()).toBe(3);   // parent component is excluded!
+            expect(testling.getComponent("bean0", false)).toBe(null);
+            expect(testling.getComponent("bean0", true)).toBe(parentComponent1);
+
+            expect((<MyComponent> testling.getComponent("bean1")).getReference()).toBe(parentComponent1);
+
+            // be sure that bean2 is used from current and not from parent
+            var bean2:MyComponent = <MyComponent> testling.getComponent("bean2");
+            expect(bean2.getName()).toBe("my-bean-2");
+            expect((<MyComponent> testling.getComponent("bean3")).getReference()).toBe(bean2);
+        });
+    });
 });
 
 
@@ -81,8 +131,8 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
     private _events:string[] = [];
 
     constructor() {
-        super();
-        this.setProcessors([new MyComponentProcessor(this._events)]);
+        super(null, null);
+        this.setComponentProcessors([new MyComponentProcessor(this._events)]);
     }
 
     /**
@@ -122,8 +172,43 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
     public getEvents() {
         return this._events;
     }
-
 }
+
+
+/**
+ * A FunctionComponentFactoryBase instance for parent test
+ */
+class ParentTestFunctionComponentFactory extends FunctionComponentFactoryBase {
+
+    constructor(parent:ComponentManager) {
+        super(null, parent);
+    }
+
+    private createComponentBean1():Promise<Object> {
+        return this.require(["bean0"]).then((dependencies:Object[]) => {
+            var bean:MyComponent = new MyComponent([]);
+            bean.setName("my-bean-1");
+            bean.setReference(dependencies[0]);
+            return Promise.resolve(bean);
+        });
+    }
+
+    private createComponentBean2():Promise<Object> {
+        var bean:MyComponent = new MyComponent([]);
+        bean.setName("my-bean-2");
+        return Promise.resolve(bean);
+    }
+
+    private createComponentBean3():Promise<Object> {
+        return this.require(["bean2"]).then((dependencies:Object[]) => {
+            var bean:MyComponent = new MyComponent([]);
+            bean.setName("my-bean-3");
+            bean.setReference(dependencies[0]);
+            return Promise.resolve(bean);
+        });
+    }
+}
+
 
 /**
  * A test component

@@ -77,10 +77,9 @@ class SceneManagerBase extends ComponentBase {
      *  will be then initialized and started. As soon an the scene notifies about {@link RunnableEvents#EVENT_FINISHED},
      *  this scene will be stopped and destroyed.
      * @param current The current scene. null if this is the first scene
-     * @param callback The callback to be invoked when the next scene is available. The scene needs to be passed to this callback
      * [PROTECTED]
      */
-    public getNextScene(current:Scene):Promise<Scene> {
+    /*protected*/ getNextScene(current:Scene):Promise<Scene> {
         return Promise.reject(Errors.createAbstractFunctionError("getNextScene"));
     }
 
