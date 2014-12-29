@@ -4,6 +4,7 @@ import ComponentManager = require("../manager/ComponentManager");
 import Components = require("../Components");
 import Maps = require("../../lang/Maps");
 import Errors = require("../../lang/Errors");
+import assert = require("../../lang/assert");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**
@@ -21,7 +22,7 @@ class ComponentFactoryBase extends ComponentManager {
 
 
     public init():Promise<any> {
-        return this.buildComponents().
+        return this.buildAllComponents().
             then(() => {
                 // perform initialization of all created components
                 return super.init();
@@ -40,8 +41,8 @@ class ComponentFactoryBase extends ComponentManager {
      * Should delegate to {@link  #doBuildBeans}
      * @protected
      */
-    /*protected*/ buildComponents():Promise<any> {
-        throw Errors.createAbstractFunctionError("buildComponents");
+    /*protected*/ buildAllComponents():Promise<any> {
+        throw Errors.createAbstractFunctionError("buildAllComponents");
     }
 
 
@@ -51,19 +52,23 @@ class ComponentFactoryBase extends ComponentManager {
      * @return The promise containing the created and populated component
      * @protected
      */
-    /*protected*/ doCreateComponent(componentName:string):Promise<Object> {
+    /*protected*/ buildComponent(componentName:string):Promise<Object> {
         throw Errors.createAbstractFunctionError("createComponent");
     }
 
-    // ==============
-
+    /**
+     * Whether or not this factory has a definition for the named component. TO BE IMPLEMENTED by custom implementation.
+     */
+    /*protected*/ hasComponentDefinition(componentName:string):boolean {
+        throw Errors.createAbstractFunctionError("hasComponentDefinition");
+    }
 
     /**
      * Triggers building named components. This will result in invocations of {@link #createComponent}
      * @param componentNames The (unordered) names of the components to be built
      * @protected
      */
-    /*protected*/ doBuildBeans(componentNames:string[]):Promise<any> {
+    /*protected*/ buildComponents(componentNames:string[]):Promise<any> {
 
         this.getLogger().info("Creating {0} components ...", componentNames.length);
         this.initializeBuild();
@@ -149,6 +154,8 @@ class ComponentFactoryBase extends ComponentManager {
      */
     private getOrCreateComponents(componentNames:string[]):Promise<Map<string,Object>> {
 
+        assert(componentNames.length > 0, "number of component names needs to be greater than zero");
+
         // get or create the first/next in the list
         var next:string = componentNames[0];
         return this.getOrCreateComponent(next).then((component:any) => {
@@ -167,7 +174,6 @@ class ComponentFactoryBase extends ComponentManager {
             this.getLogger().error("Error creating component {0}: {1}", next, error);
             return Promise.reject("Error creating components "+componentNames); // bubble up
         });
-
     }
 
     /**
@@ -183,9 +189,9 @@ class ComponentFactoryBase extends ComponentManager {
             this.getLogger().debug("Component {0} is already available: {1}", componentName, existing);
             return Promise.resolve(existing);
         }
-        else {
+        else if( this.hasComponentDefinition(componentName) ) {
 
-            // not built yet.
+            // not built yet but a definition is available
             this.getLogger().info("Creating component {0} ...", componentName);
             if( this._buildDependencyStack.indexOf(componentName) !== -1 ) {
                 throw Errors.createIllegalStateError("Recursion detected: "+this._buildDependencyStack.join(" -> ")+" -> "+componentName);
@@ -193,7 +199,7 @@ class ComponentFactoryBase extends ComponentManager {
             this._buildDependencyStack.push(componentName); // put the current name on the stack for detecting recursions
 
             // do build (recursively)
-            return this.doCreateComponent(componentName).then((createdComponent:Object) => {
+            return this.buildComponent(componentName).then((createdComponent:Object) => {
 
                 this.getLogger().info("Component {0} has been created: {1}", componentName, createdComponent);
                 // register component
@@ -205,6 +211,21 @@ class ComponentFactoryBase extends ComponentManager {
                 this.getLogger().error("Error creating component {0}: {1}", componentName, error);
                 return Promise.reject(error); // bubble up
             })*/;
+        }
+        else {
+
+            // no definition available. have a look at the parent ...
+            var result:any = null;
+            if( !!this.getParent() ) {
+                result = this.getParent().getComponent(componentName);
+            }
+            if( result === null ) {
+                // parent doesn't know this
+                return Promise.reject(Errors.createIllegalStateError("Unknown component "+componentName));
+            }
+            else {
+                return Promise.resolve(result);
+            }
         }
     }
 }

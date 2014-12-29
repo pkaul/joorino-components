@@ -4,6 +4,7 @@ import Initializable = require("../../../main/component/Initializable");
 import Destroyable = require("../../../main/component/Destroyable");
 import FunctionComponentFactoryBase = require("../../../main/component/factory/FunctionComponentFactoryBase");
 import ComponentProcessor = require("../../../main/component/manager/ComponentProcessor");
+import ComponentManager = require("../../../main/component/manager/ComponentManager");
 //import Configurator = require("../../../main/logger/runtime/Configurator");
 
 /**
@@ -20,6 +21,7 @@ describe("FunctionComponentFactoryBase", function():void {
 
         var initialized:boolean = false;
         var destroyed:boolean = false;
+
         var testling:TestFunctionComponentFactory = new TestFunctionComponentFactory();
 
         testling.init().then(() => {
@@ -67,7 +69,51 @@ describe("FunctionComponentFactoryBase", function():void {
             // check the destruction order. make sure that the destruction takes place in reverse order than init
             expect(testling.getEvents().join(",")).toBe("beforeinit(bean3),beforeinit(bean2),beforeinit(bean1),init(my-bean-3),init(my-bean-2),init(my-bean-1),afterinit(bean3),afterinit(bean2),afterinit(bean1),beforedestroy(bean1),beforedestroy(bean2),beforedestroy(bean3),destroy(my-bean-1),destroy(my-bean-2),destroy(my-bean-3),afterdestroy(bean1),afterdestroy(bean2),afterdestroy(bean3)");
         });
-    })
+    });
+
+    /**
+     * Tests use of parent by testling
+     */
+    it("testParent", () => {
+
+        // create a parent
+        var parent:ComponentManager = new ComponentManager();
+        var parentComponent:MyComponent = new MyComponent([]);
+        parentComponent.setName("parentComponent");
+        parent.register(parentComponent, "parentComponent");
+
+        // create the testling
+        var testling:ParentTestFunctionComponentFactory = new ParentTestFunctionComponentFactory(parent);
+
+        // do a proper initialization
+        var initialized:boolean = false;
+        parent.init().then(() => {
+            return testling.init().then(() => {
+                initialized = true;
+                return Promise.resolve();
+            });
+        });
+
+
+        waitsFor(() => {
+            return initialized;
+        });
+        runs(() => {
+
+            expect(initialized).toBe(true);
+
+            expect(testling.getComponentsCount()).toBe(1);
+            expect(testling.getComponent("parentComponent", false)).toBe(null);
+            expect(testling.getComponent("parentComponent", true)).toBe(parentComponent);
+
+            expect((<MyComponent> testling.getComponent("bean1")).getReference()).toBe(parentComponent);
+
+        });
+
+
+
+
+    });
 });
 
 
@@ -122,8 +168,28 @@ class TestFunctionComponentFactory extends FunctionComponentFactoryBase {
     public getEvents() {
         return this._events;
     }
-
 }
+
+
+/**
+ * A FunctionComponentFactoryBase instance for parent test
+ */
+class ParentTestFunctionComponentFactory extends FunctionComponentFactoryBase {
+
+    constructor(parent:ComponentManager) {
+        super(null, parent);
+    }
+
+    private createComponentBean1():Promise<Object> {
+        return this.require(["parentComponent"]).then((dependencies:Object[]) => {
+            var bean:MyComponent = new MyComponent([]);
+            bean.setName("my-bean-1");
+            bean.setReference(dependencies[0]);
+            return Promise.resolve(bean);
+        });
+    }
+}
+
 
 /**
  * A test component

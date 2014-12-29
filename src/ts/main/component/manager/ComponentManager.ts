@@ -160,12 +160,14 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
 
     /**
      * A named component. If this manager doesn't know such a component, the parent is asked.
+     * @param name The component name
+     * @param lookupParent Whether or not the parent shall be taken into account for component lookup
      * @return The component or null if not found
      */
-    public getComponent(name:string):any {
+    public getComponent(name:string, lookupParent:boolean = false):any {
         this.assert(!!this._components, "Not initialized or already destroyed");
         var result:any = this._components.get(name);
-        if( !result ) {
+        if( !result && lookupParent ) {
             result = this._parent.getComponent(name);
         }
         return !result ? null : result;
@@ -187,6 +189,13 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     public getComponentsCount():number {
         this.assert(!!this._components, "Not initialized or already destroyed");
         return this._components.size;
+    }
+
+    /**
+     * @return The parent component manager if available
+     */
+    public getParent():ComponentManager {
+        return this._parent;
     }
 
     // -----------------

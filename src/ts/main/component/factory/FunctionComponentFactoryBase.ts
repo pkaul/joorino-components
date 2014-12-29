@@ -49,18 +49,18 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
     // ===================
 
 
-    public buildComponents():Promise<any> {
+    /*protected*/ buildAllComponents():Promise<any> {
 
         this._componentsDefinitions = this.lookupComponentCreators();
         if( this._componentsDefinitions.size === 0 ) {
             throw Errors.createIllegalArgumentError("No component definitions available: "+this._componentsDefinitions);
         }
 
-        return this.doBuildBeans(Maps.keys(this._componentsDefinitions));
+        return this.buildComponents(Maps.keys(this._componentsDefinitions));
     }
 
 
-    public doCreateComponent(name:string):Promise<Object> {
+    /*protected*/ buildComponent(name:string):Promise<Object> {
 
         // lookup 'create' function from definitions
         var createFunction:Function = this._componentsDefinitions.get(name);
@@ -85,7 +85,13 @@ class FunctionComponentFactoryBase extends ComponentFactoryBase {
         });
     }
 
-    // =========
+
+
+    /*protected*/ hasComponentDefinition(componentName:string):boolean {
+        return this._componentsDefinitions.has(componentName);
+    }
+
+// =========
 
 
     /**
