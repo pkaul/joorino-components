@@ -76,11 +76,15 @@ describe("FunctionComponentFactoryBase", function():void {
      */
     it("testParent", () => {
 
-        // create a parent
+        // create a parent containing bean0 and bean2
         var parent:ComponentManager = new ComponentManager();
-        var parentComponent:MyComponent = new MyComponent([]);
-        parentComponent.setName("parentComponent");
-        parent.register(parentComponent, "parentComponent");
+        var parentComponent1:MyComponent = new MyComponent([]);
+        parentComponent1.setName("parent-bean-0");
+        parent.register(parentComponent1, "bean0");
+
+        var parentComponent2:MyComponent = new MyComponent([]);
+        parentComponent2.setName("parent-bean-2");
+        parent.register(parentComponent2, "bean2");
 
         // create the testling
         var testling:ParentTestFunctionComponentFactory = new ParentTestFunctionComponentFactory(parent);
@@ -102,17 +106,17 @@ describe("FunctionComponentFactoryBase", function():void {
 
             expect(initialized).toBe(true);
 
-            expect(testling.getComponentsCount()).toBe(1);
-            expect(testling.getComponent("parentComponent", false)).toBe(null);
-            expect(testling.getComponent("parentComponent", true)).toBe(parentComponent);
+            expect(testling.getComponentsCount()).toBe(3);   // parent component is excluded!
+            expect(testling.getComponent("bean0", false)).toBe(null);
+            expect(testling.getComponent("bean0", true)).toBe(parentComponent1);
 
-            expect((<MyComponent> testling.getComponent("bean1")).getReference()).toBe(parentComponent);
+            expect((<MyComponent> testling.getComponent("bean1")).getReference()).toBe(parentComponent1);
 
+            // be sure that bean2 is used from current and not from parent
+            var bean2:MyComponent = <MyComponent> testling.getComponent("bean2");
+            expect(bean2.getName()).toBe("my-bean-2");
+            expect((<MyComponent> testling.getComponent("bean3")).getReference()).toBe(bean2);
         });
-
-
-
-
     });
 });
 
@@ -181,9 +185,24 @@ class ParentTestFunctionComponentFactory extends FunctionComponentFactoryBase {
     }
 
     private createComponentBean1():Promise<Object> {
-        return this.require(["parentComponent"]).then((dependencies:Object[]) => {
+        return this.require(["bean0"]).then((dependencies:Object[]) => {
             var bean:MyComponent = new MyComponent([]);
             bean.setName("my-bean-1");
+            bean.setReference(dependencies[0]);
+            return Promise.resolve(bean);
+        });
+    }
+
+    private createComponentBean2():Promise<Object> {
+        var bean:MyComponent = new MyComponent([]);
+        bean.setName("my-bean-2");
+        return Promise.resolve(bean);
+    }
+
+    private createComponentBean3():Promise<Object> {
+        return this.require(["bean2"]).then((dependencies:Object[]) => {
+            var bean:MyComponent = new MyComponent([]);
+            bean.setName("my-bean-3");
             bean.setReference(dependencies[0]);
             return Promise.resolve(bean);
         });
