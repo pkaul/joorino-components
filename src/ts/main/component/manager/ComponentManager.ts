@@ -12,6 +12,7 @@ import Logger = require("./../../logger/Logger");
 import LoggerFactory = require("./../../logger/LoggerFactory");
 import Errors = require("../../lang/Errors");
 import Maps = require("../../lang/Maps");
+import Classes = require("../../lang/Classes");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**
@@ -24,7 +25,6 @@ import Maps = require("../../lang/Maps");
 class ComponentManager extends ComponentBase /*implements Initializable, Startable, Stoppable, Destroyable*/ {
 
     private static _idCount:number = 0;
-    private static _idPrefix:string = "_cmpnt";
 
     /**
      * Name of an event that is raised when a component is {@link #register}ed
@@ -75,7 +75,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     public register(component:Object, id?:string):Promise<any> {
 
         // generate an id if none available
-        id = !!id ? id : ComponentManager.generateId();
+        id = !!id ? id : ComponentManager.generateId(component);
 
         // store the component internally
         if( this._components.has(id) ) {
@@ -364,8 +364,11 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     }
 
 
-    private static generateId():string {
-        return ComponentManager._idPrefix+(ComponentManager._idCount++);
+    /**
+     * Generates an id for a given component
+     */
+    private static generateId(component:any):string {
+        return Classes.getClassName(component)+(ComponentManager._idCount++);
     }
 
     private clone(source:Map<string, any>):Map<string, any>  {
