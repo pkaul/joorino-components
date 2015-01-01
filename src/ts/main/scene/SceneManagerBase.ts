@@ -16,6 +16,7 @@ class SceneManagerBase extends ComponentBase {
 
     // the currently running scene
     private _current:Scene = null;
+    private _started:boolean = false;
 
     constructor(name:string=null) {
         super(name);
@@ -24,21 +25,25 @@ class SceneManagerBase extends ComponentBase {
     public start():void {
 
         super.start();
-        // compute the first scene
-        Promises.withTimeout(this.getNextScene(null), () => {
-            this.getLogger().error("Timeout on setting up the first scene");
-        }, SceneManagerBase.LIFECYCLE_TIMEOUT).then(
-            (scene:Scene) => {
-                // scene has been determined
-                return this.sceneCreated(scene).then(
-                    () => {
+
+        if( !this._started ) {
+
+            // the manager has been started the very first time: Setup the initial scene
+            this._started = true;
+
+            Promises.withTimeout(this.getNextScene(null), () => {
+                this.getLogger().error("Timeout on setting up the first scene");
+            }, SceneManagerBase.LIFECYCLE_TIMEOUT).then((scene:Scene) => {
+                    // scene has been determined
+                    return this.sceneCreated(scene).then(() => {
                         this.getLogger().info("First scene is: {0}", scene);
                     });
-            }
-        ).catch((error:any) => {
-                this.getLogger().error("Error setting up first scene: {0}", error);
-            }
-        );
+                }
+            ).catch((error:any) => {
+                    this.getLogger().error("Error setting up first scene: {0}", error);
+                }
+            );
+        }
     }
 
     public stop():void {
@@ -54,17 +59,16 @@ class SceneManagerBase extends ComponentBase {
     public destroy():Promise<any> {
 
         this.getLogger().info("Destroying ...");
-        return super.destroy().then(
-            () => {
-                if( this._current != null ) {
-                    // when there is a currently running scene: destroy it
-                    return this._current.destroy();
-                }
-                else {
-                    // if not: we are finished
-                    return Promise.resolve();
-                }
-            });
+        return super.destroy().then(() => {
+            if( this._current != null ) {
+                // when there is a currently running scene: destroy it
+                return this._current.destroy();
+            }
+            else {
+                // if not: we are finished
+                return Promise.resolve();
+            }
+        });
     }
 
 
@@ -83,6 +87,12 @@ class SceneManagerBase extends ComponentBase {
         return Promise.reject(Errors.createAbstractFunctionError("getNextScene"));
     }
 
+    /**
+     * @return The currently active scene
+     */
+    /*protected*/ getCurrentScene():Scene {
+        return this._current;
+    }
 
     /**
      * Will be invoked when a new scene is ready to run
