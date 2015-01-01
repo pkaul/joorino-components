@@ -13,6 +13,7 @@ import LoggerFactory = require("./../../logger/LoggerFactory");
 import Errors = require("../../lang/Errors");
 import Maps = require("../../lang/Maps");
 import Classes = require("../../lang/Classes");
+import assert = require("../../lang/assert");
 /// <reference path="../../../es6-promises/es6-promises.d.ts"/>
 
 /**
@@ -60,6 +61,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     }
 
     public setComponentProcessors(componentProcessors:ComponentProcessor[]) {
+        this.assertNotInitialized();
         this._processors = componentProcessors;
     }
 
@@ -67,7 +69,16 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
      * Sets the timeout in ms after which a lifecycle phase (e.g. #init) shall be detected as incomplete
      */
     public setLifecycleTimeout(timeout:number):void {
+        this.assertNotInitialized();
         this._lifecycleTimeout = timeout;
+    }
+
+    /**
+     * Sets the parent of this manager
+     */
+    public setParent(parent:ComponentManager):void {
+        this.assertNotInitialized();
+        this._parent = parent;
     }
 
     /**

@@ -6,6 +6,7 @@ import Startable = require("./Startable");
 import Stoppable = require("./Stoppable");
 import Components = require("./Components");
 import Errors = require("../lang/Errors");
+import assert = require("../lang/assert");
 /// <reference path="../../es6-promises/es6-promises.d.ts"/>
 
 /**
@@ -88,21 +89,19 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
     }
 
 
+    // ===========================
 
     /**
      * @return The current lifecycle state
      */
-    public getLifecycleState():number {
+    /*protected*/ getLifecycleState():number {
         return this._state;
     }
-
-
-    // ========
 
     /**
      * Asserts that this component is at least initialized and not destroyed. If not, an error is thrown
      */
-    private assertInitialized():void {
+    /*protected*/ assertInitialized():void {
         if( this._state < ComponentBase.STATE_INITIALIZED || this._state >= ComponentBase.STATE_DESTROYED ) {
             throw Errors.createIllegalStateError("Component "+this+" is not in state 'initialized' but in state '"+this.getStateAsString()+"'");
         }
@@ -114,12 +113,13 @@ class ComponentBase extends ObjectBase implements Initializable, Destroyable, St
     /**
      * Asserts that this component is not initialized yet. If not true, an error is thrown
      */
-    private assertNotInitialized():void {
+    /*protected*/  assertNotInitialized():void {
         if( this._state !== ComponentBase.STATE_CREATED ) {
             throw Errors.createIllegalStateError("Could not initialize "+this+". State is already '"+this.getStateAsString()+"'");
         }
     }
 
+    // ========
 
     /**
      * @return The current state as human readable string
