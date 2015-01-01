@@ -44,7 +44,7 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
     private _processors:ComponentProcessor[];
     private _parent:ComponentManager;
 
-    private _lifecycleTimeout:number = 5000;    // TODO make configurable
+    private _lifecycleTimeout:number = 5000;    // 5 secs.
 
     /**
      *
@@ -61,6 +61,13 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
 
     public setComponentProcessors(componentProcessors:ComponentProcessor[]) {
         this._processors = componentProcessors;
+    }
+
+    /**
+     * Sets the timeout in ms after which a lifecycle phase (e.g. #init) shall be detected as incomplete
+     */
+    public setLifecycleTimeout(timeout:number):void {
+        this._lifecycleTimeout = timeout;
     }
 
     /**
@@ -250,6 +257,9 @@ class ComponentManager extends ComponentBase /*implements Initializable, Startab
         return false;
     }
 
+    /*protected*/ getLifecycleTimeout():number {
+        return this._lifecycleTimeout;
+    }
 
     // ============
 
